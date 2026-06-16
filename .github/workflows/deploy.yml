@@ -1,0 +1,28 @@
+# Prompt Reconstruction Engine — Firebase Hosting CI/CD
+# Auto-deploys to Firebase Hosting on push to main branch
+
+name: Deploy to Firebase Hosting
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: JS Syntax Check
+        run: |
+          python3 .github/workflows/check_js_syntax.py
+
+      - name: Deploy to Firebase
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          projectId: prompt-reconstruction-engine
+          channelId: live

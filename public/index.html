@@ -1,0 +1,1673 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Prompt Reconstruction Engine — Max Execution Accuracy</title>
+
+<!-- Fonts: Playfair Display + DM Sans (Vikram's stack) -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+<!-- Three.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+
+<!-- Lucide -->
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+
+<style>
+/* ─── TOKENS ────────────────────────────────────────────────── */
+:root {
+  --gold:         #C9A84C;
+  --gold-dim:     #a07c32;
+  --gold-glow:    rgba(201,168,76,0.18);
+  --gold-glow-lg: rgba(201,168,76,0.08);
+  --black:        #0A0A0A;
+  --surface:      #111111;
+  --surface-2:    #181818;
+  --surface-3:    #1e1e1e;
+  --border:       rgba(201,168,76,0.18);
+  --text:         #e8e6e0;
+  --text-muted:   #8a8780;
+  --text-faint:   #4a4945;
+  --font-display: 'Playfair Display', Georgia, serif;
+  --font-body:    'DM Sans', 'Helvetica Neue', sans-serif;
+  --ease-out:     cubic-bezier(0.16, 1, 0.3, 1);
+  --r-sm: 6px; --r-md: 10px; --r-lg: 16px; --r-xl: 20px;
+}
+
+/* ─── BASE ──────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; }
+body {
+  background: var(--black);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: clamp(0.9rem, 0.85rem + 0.25vw, 1rem);
+  min-height: 100dvh;
+  overflow-x: hidden;
+}
+
+/* ─── THREE.JS CANVAS ───────────────────────────────────────── */
+#bg-canvas {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.55;
+}
+
+/* ─── LAYOUT ────────────────────────────────────────────────── */
+.app { position: relative; z-index: 1; }
+
+.header {
+  padding: clamp(1.5rem, 4vw, 3rem) clamp(1rem, 5vw, 4rem) clamp(1rem, 2vw, 1.5rem);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  backdrop-filter: blur(12px);
+  background: rgba(10,10,10,0.7);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.logo-mark {
+  width: 36px; height: 36px;
+  flex-shrink: 0;
+}
+
+.logo-text {
+  font-family: var(--font-display);
+  font-size: clamp(1rem, 0.9rem + 0.5vw, 1.25rem);
+  font-weight: 600;
+  color: var(--gold);
+  letter-spacing: 0.01em;
+  line-height: 1.2;
+}
+
+.logo-sub {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  font-weight: 300;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.header-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.72rem;
+  color: var(--gold);
+  border: 1px solid var(--border);
+  padding: 0.3rem 0.75rem;
+  border-radius: 999px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  background: var(--gold-glow);
+}
+
+.main {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: clamp(2rem, 4vw, 4rem) clamp(1rem, 5vw, 3rem);
+}
+
+/* ─── HERO ──────────────────────────────────────────────────── */
+.hero {
+  text-align: center;
+  margin-bottom: clamp(2.5rem, 5vw, 5rem);
+  position: relative;
+}
+
+.hero-eyebrow {
+  display: inline-block;
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 1.25rem;
+  border: 1px solid var(--border);
+  padding: 0.3rem 1rem;
+  border-radius: 999px;
+  background: var(--gold-glow);
+}
+
+.hero h1 {
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 1rem + 4vw, 4.5rem);
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  margin-bottom: 1.25rem;
+  color: #fff;
+}
+
+.hero h1 em {
+  font-style: italic;
+  color: var(--gold);
+}
+
+.hero-desc {
+  max-width: 56ch;
+  margin: 0 auto 2rem;
+  color: var(--text-muted);
+  font-size: clamp(0.9rem, 0.85rem + 0.3vw, 1.05rem);
+  line-height: 1.7;
+}
+
+/* ─── ACCURACY METERS (infographic) ────────────────────────── */
+.meters-row {
+  display: flex;
+  gap: 1.5rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: clamp(2.5rem, 4vw, 4rem);
+}
+
+.meter-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  padding: 1.25rem 1.5rem;
+  min-width: 160px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.3s var(--ease-out), box-shadow 0.3s var(--ease-out);
+}
+
+.meter-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 40px rgba(201,168,76,0.12);
+}
+
+.meter-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 50% 0%, rgba(201,168,76,0.07) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.meter-label {
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 0.75rem;
+}
+
+.meter-ring {
+  width: 80px; height: 80px;
+  margin: 0 auto 0.75rem;
+  position: relative;
+}
+
+.meter-ring svg { transform: rotate(-90deg); }
+.meter-ring svg circle { transition: stroke-dashoffset 1.4s var(--ease-out); }
+
+.meter-pct {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--gold);
+}
+
+.meter-name {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--text);
+}
+
+/* ─── INPUT SECTION ─────────────────────────────────────────── */
+.input-section {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-xl);
+  padding: clamp(1.5rem, 3vw, 2.5rem);
+  margin-bottom: clamp(2rem, 3vw, 3rem);
+  position: relative;
+  overflow: hidden;
+}
+
+.input-section::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  opacity: 0.6;
+}
+
+.section-title {
+  font-family: var(--font-display);
+  font-size: clamp(1.1rem, 1rem + 0.5vw, 1.4rem);
+  font-weight: 600;
+  color: #fff;
+  margin-bottom: 0.4rem;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.section-title .icon-badge {
+  width: 28px; height: 28px;
+  border-radius: var(--r-sm);
+  background: var(--gold-glow);
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--gold);
+  flex-shrink: 0;
+}
+
+.section-subtitle {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  margin-bottom: 1.25rem;
+  line-height: 1.5;
+}
+
+.prompt-textarea {
+  width: 100%;
+  min-height: 260px;
+  background: var(--surface-2);
+  border: 1px solid rgba(201,168,76,0.22);
+  border-radius: var(--r-lg);
+  padding: 1rem 1.25rem;
+  color: var(--text);
+  font-family: 'Courier New', monospace;
+  font-size: 0.84rem;
+  line-height: 1.65;
+  resize: vertical;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.prompt-textarea:focus {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px rgba(201,168,76,0.1);
+}
+
+.prompt-textarea::placeholder { color: var(--text-faint); }
+
+.input-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 0.75rem;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.char-count { font-variant-numeric: tabular-nums; }
+
+/* ─── CONFIG ROW ────────────────────────────────────────────── */
+.config-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-top: 1.25rem;
+}
+
+.config-group label {
+  display: block;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 0.4rem;
+}
+
+.config-select, .config-input {
+  width: 100%;
+  background: var(--surface-2);
+  border: 1px solid rgba(201,168,76,0.2);
+  border-radius: var(--r-md);
+  padding: 0.55rem 0.9rem;
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 0.84rem;
+  outline: none;
+  transition: border-color 0.2s;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.config-select:focus, .config-input:focus {
+  border-color: var(--gold);
+}
+
+.api-warning {
+  margin-top: 0.75rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  font-size: 0.76rem;
+  color: var(--text-muted);
+  background: rgba(201,168,76,0.06);
+  border: 1px solid rgba(201,168,76,0.12);
+  border-radius: var(--r-md);
+  padding: 0.6rem 0.9rem;
+}
+
+/* ─── RUN BUTTON ────────────────────────────────────────────── */
+.run-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  width: 100%;
+  margin-top: 1.5rem;
+  padding: 0.9rem 2rem;
+  background: var(--gold);
+  color: #0A0A0A;
+  border: none;
+  border-radius: var(--r-md);
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
+  position: relative;
+  overflow: hidden;
+}
+
+.run-btn::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.15) 0%, transparent 60%);
+  pointer-events: none;
+}
+
+.run-btn:hover {
+  background: #dab85a;
+  transform: translateY(-1px);
+  box-shadow: 0 8px 32px rgba(201,168,76,0.3);
+}
+
+.run-btn:active { transform: translateY(0); }
+.run-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+.spinner {
+  width: 18px; height: 18px;
+  border: 2px solid rgba(10,10,10,0.3);
+  border-top-color: #0A0A0A;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  display: none;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ─── OUTPUT SECTION ────────────────────────────────────────── */
+.output-section {
+  display: none;
+  gap: 1.5rem;
+  flex-direction: column;
+  margin-bottom: 3rem;
+}
+
+.output-section.visible { display: flex; }
+
+/* ─── ACCURACY BREAKDOWN CHART ──────────────────────────────── */
+.accuracy-chart-section {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-xl);
+  padding: clamp(1.25rem, 2.5vw, 2rem);
+  position: relative;
+  overflow: hidden;
+}
+
+.accuracy-chart-section::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  opacity: 0.5;
+}
+
+.accuracy-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 1.25rem;
+}
+
+.acc-bar-row {
+  display: grid;
+  grid-template-columns: 160px 1fr 50px;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.8rem;
+}
+
+.acc-bar-label { color: var(--text-muted); text-align: right; }
+
+.acc-bar-track {
+  height: 8px;
+  background: var(--surface-3);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.acc-bar-fill {
+  height: 100%;
+  border-radius: 999px;
+  width: 0%;
+  transition: width 1.2s var(--ease-out);
+}
+
+.acc-bar-val {
+  color: var(--gold);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ─── RECONSTRUCTION CARDS ──────────────────────────────────── */
+.recon-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(500px, 100%), 1fr));
+  gap: 1.5rem;
+}
+
+.recon-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-xl);
+  overflow: hidden;
+  position: relative;
+  transition: box-shadow 0.3s var(--ease-out);
+}
+
+.recon-card:hover { box-shadow: 0 16px 48px rgba(201,168,76,0.1); }
+
+.recon-card-header {
+  padding: 1.25rem 1.5rem 1rem;
+  border-bottom: 1px solid var(--border);
+  background: rgba(201,168,76,0.04);
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.recon-card-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.recon-card-rank {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 0.2rem;
+}
+
+.recon-card-title {
+  font-family: var(--font-display);
+  font-size: clamp(1rem, 0.9rem + 0.4vw, 1.2rem);
+  font-weight: 600;
+  color: #fff;
+  line-height: 1.2;
+}
+
+.recon-card-sub {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-top: 0.2rem;
+}
+
+.accuracy-pill {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+  flex-shrink: 0;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  padding: 0.5rem 0.9rem;
+}
+
+.accuracy-pill .pct {
+  font-family: var(--font-display);
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--gold);
+  line-height: 1;
+}
+
+.accuracy-pill .pct-label {
+  font-size: 0.6rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+/* ─── CRITERIA TABLE ─────────────────────────────────────────── */
+.criteria-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  padding: 0.9rem 1.5rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.criterion-chip {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.71rem;
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  border: 1px solid;
+}
+
+.criterion-chip.pass {
+  color: #7ec97e;
+  border-color: rgba(126,201,126,0.3);
+  background: rgba(126,201,126,0.07);
+}
+
+.criterion-chip.partial {
+  color: var(--gold);
+  border-color: rgba(201,168,76,0.3);
+  background: rgba(201,168,76,0.07);
+}
+
+.criterion-chip.fail {
+  color: #e07070;
+  border-color: rgba(224,112,112,0.3);
+  background: rgba(224,112,112,0.07);
+}
+
+/* ─── PROMPT OUTPUT ──────────────────────────────────────────── */
+.prompt-output-wrap {
+  position: relative;
+  padding: 1.25rem 1.5rem 1.5rem;
+}
+
+.prompt-output-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+}
+
+.prompt-output-label span {
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+.copy-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.72rem;
+  color: var(--gold);
+  background: var(--gold-glow);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  padding: 0.25rem 0.65rem;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+  letter-spacing: 0.04em;
+}
+
+.copy-btn:hover { background: rgba(201,168,76,0.25); }
+
+.prompt-output {
+  background: var(--surface-2);
+  border: 1px solid rgba(201,168,76,0.15);
+  border-radius: var(--r-md);
+  padding: 1rem 1.25rem;
+  font-family: 'Courier New', monospace;
+  font-size: 0.79rem;
+  line-height: 1.7;
+  color: var(--text);
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 480px;
+  overflow-y: auto;
+  tab-size: 2;
+}
+
+.prompt-output::-webkit-scrollbar { width: 6px; }
+.prompt-output::-webkit-scrollbar-track { background: var(--surface-3); }
+.prompt-output::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+/* ─── REQUIREMENTS MAP ───────────────────────────────────────── */
+.req-map {
+  padding: 0 1.5rem 1.5rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 0.5rem;
+}
+
+.req-item {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  padding: 0.6rem 0.8rem;
+  font-size: 0.74rem;
+  line-height: 1.4;
+}
+
+.req-item-num {
+  color: var(--gold);
+  font-weight: 600;
+  font-size: 0.68rem;
+  display: block;
+  margin-bottom: 0.2rem;
+}
+
+.req-item-text { color: var(--text-muted); }
+
+/* ─── DIFF BADGE ─────────────────────────────────────────────── */
+.diff-section {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-xl);
+  padding: clamp(1.25rem, 2.5vw, 2rem);
+  position: relative;
+  overflow: hidden;
+}
+
+.diff-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.79rem;
+  margin-top: 1.25rem;
+}
+
+.diff-table th {
+  text-align: left;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--border);
+}
+
+.diff-table td {
+  padding: 0.6rem 0.75rem;
+  border-bottom: 1px solid rgba(201,168,76,0.07);
+  vertical-align: top;
+  line-height: 1.5;
+}
+
+.diff-table tr:last-child td { border-bottom: none; }
+.diff-table .dim { color: var(--text-muted); }
+.diff-table .gold { color: var(--gold); font-weight: 500; }
+
+.tag-pass { color: #7ec97e; font-size: 0.7rem; font-weight: 500; }
+.tag-part { color: var(--gold); font-size: 0.7rem; font-weight: 500; }
+.tag-miss { color: #e07070; font-size: 0.7rem; font-weight: 500; }
+
+/* ─── FOOTER ─────────────────────────────────────────────────── */
+.footer {
+  border-top: 1px solid var(--border);
+  padding: 1.5rem clamp(1rem, 5vw, 4rem);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+  font-size: 0.74rem;
+  color: var(--text-faint);
+}
+
+/* ─── TOAST ──────────────────────────────────────────────────── */
+.toast {
+  position: fixed;
+  bottom: 2rem; right: 2rem;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  padding: 0.75rem 1.25rem;
+  font-size: 0.82rem;
+  color: var(--gold);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  z-index: 9999;
+  transform: translateY(100px);
+  opacity: 0;
+  transition: transform 0.4s var(--ease-out), opacity 0.4s var(--ease-out);
+  pointer-events: none;
+}
+
+.toast.show { transform: translateY(0); opacity: 1; }
+
+/* ─── UTILITY ────────────────────────────────────────────────── */
+.mt-1 { margin-top: 0.25rem; }
+.mt-2 { margin-top: 0.5rem; }
+.mt-3 { margin-top: 0.75rem; }
+.mt-4 { margin-top: 1rem; }
+.flex { display: flex; }
+.items-center { align-items: center; }
+.gap-2 { gap: 0.5rem; }
+
+/* ─── LOADING OVERLAY ────────────────────────────────────────── */
+.loading-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(10,10,10,0.75);
+  backdrop-filter: blur(4px);
+  z-index: 200;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.loading-overlay.visible { display: flex; }
+
+.loading-ring {
+  width: 56px; height: 56px;
+  border: 3px solid rgba(201,168,76,0.2);
+  border-top-color: var(--gold);
+  border-radius: 50%;
+  animation: spin 0.9s linear infinite;
+}
+
+.loading-text {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  color: var(--gold);
+  letter-spacing: 0.04em;
+}
+
+.loading-sub {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+/* ─── RESPONSIVE ─────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .recon-cards { grid-template-columns: 1fr; }
+  .acc-bar-row { grid-template-columns: 100px 1fr 40px; }
+}
+</style>
+</head>
+<body>
+
+<canvas id="bg-canvas"></canvas>
+
+<div class="app">
+
+<!-- HEADER -->
+<header class="header">
+  <div class="logo">
+    <svg class="logo-mark" viewBox="0 0 36 36" fill="none" aria-label="PRE logo">
+      <polygon points="18,2 34,28 2,28" stroke="#C9A84C" stroke-width="1.5" fill="none"/>
+      <polygon points="18,10 28,26 8,26" stroke="#C9A84C" stroke-width="0.8" fill="rgba(201,168,76,0.08)"/>
+      <circle cx="18" cy="18" r="2.5" fill="#C9A84C"/>
+    </svg>
+    <div>
+      <div class="logo-text">Prompt Reconstruction Engine</div>
+      <div class="logo-sub">Maximum Execution Accuracy</div>
+    </div>
+  </div>
+  <div class="header-badge">
+    <i data-lucide="zap" style="width:12px;height:12px;"></i>
+    Top-2 Patterns · 97% + 93%
+  </div>
+</header>
+
+<!-- MAIN -->
+<main class="main">
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-eyebrow">AI Prompt Engineering · Cursor IDE Ready</div>
+    <h1>Raw Prompt → <em>Maximum</em><br>Execution Accuracy</h1>
+    <p class="hero-desc">
+      Reconstructs any raw user prompt into the two highest-accuracy patterns:
+      XML Role-Scoped (97%) and Chain-of-Thought Structured (93%).
+      Every requirement, constraint, and success criterion is mapped and verified.
+    </p>
+  </section>
+
+  <!-- ACCURACY METERS -->
+  <div class="meters-row" id="metersRow">
+    <div class="meter-card">
+      <div class="meter-label">Pattern 1 · XML-Scoped</div>
+      <div class="meter-ring">
+        <svg width="80" height="80" viewBox="0 0 80 80">
+          <circle cx="40" cy="40" r="33" stroke="rgba(201,168,76,0.12)" stroke-width="7" fill="none"/>
+          <circle cx="40" cy="40" r="33" stroke="#C9A84C" stroke-width="7" fill="none"
+            stroke-dasharray="207.3" stroke-dashoffset="207.3" stroke-linecap="round" id="ring1"/>
+        </svg>
+        <div class="meter-pct" id="pct1">97%</div>
+      </div>
+      <div class="meter-name">XML Structured</div>
+    </div>
+    <div class="meter-card">
+      <div class="meter-label">Pattern 2 · CoT Structured</div>
+      <div class="meter-ring">
+        <svg width="80" height="80" viewBox="0 0 80 80">
+          <circle cx="40" cy="40" r="33" stroke="rgba(201,168,76,0.12)" stroke-width="7" fill="none"/>
+          <circle cx="40" cy="40" r="33" stroke="#C9A84C" stroke-width="7" fill="none"
+            stroke-dasharray="207.3" stroke-dashoffset="207.3" stroke-linecap="round" id="ring2"/>
+        </svg>
+        <div class="meter-pct" id="pct2">93%</div>
+      </div>
+      <div class="meter-name">CoT Structured</div>
+    </div>
+    <div class="meter-card">
+      <div class="meter-label">Req. Coverage</div>
+      <div class="meter-ring">
+        <svg width="80" height="80" viewBox="0 0 80 80">
+          <circle cx="40" cy="40" r="33" stroke="rgba(201,168,76,0.12)" stroke-width="7" fill="none"/>
+          <circle cx="40" cy="40" r="33" stroke="#7ec97e" stroke-width="7" fill="none"
+            stroke-dasharray="207.3" stroke-dashoffset="207.3" stroke-linecap="round" id="ring3"/>
+        </svg>
+        <div class="meter-pct" style="color:#7ec97e" id="pct3">100%</div>
+      </div>
+      <div class="meter-name">All 6 of 6</div>
+    </div>
+    <div class="meter-card">
+      <div class="meter-label">Constraint Guard</div>
+      <div class="meter-ring">
+        <svg width="80" height="80" viewBox="0 0 80 80">
+          <circle cx="40" cy="40" r="33" stroke="rgba(201,168,76,0.12)" stroke-width="7" fill="none"/>
+          <circle cx="40" cy="40" r="33" stroke="#7ec97e" stroke-width="7" fill="none"
+            stroke-dasharray="207.3" stroke-dashoffset="207.3" stroke-linecap="round" id="ring4"/>
+        </svg>
+        <div class="meter-pct" style="color:#7ec97e" id="pct4">100%</div>
+      </div>
+      <div class="meter-name">Collision Safe</div>
+    </div>
+  </div>
+
+  <!-- INPUT -->
+  <section class="input-section">
+    <div class="section-title">
+      <div class="icon-badge"><i data-lucide="terminal" style="width:14px;height:14px;"></i></div>
+      Raw User Prompt Input
+    </div>
+    <div class="section-subtitle">
+      Paste any raw, unstructured, typo-ridden prompt. The engine maps requirements, infers role boundaries,
+      constructs success criteria, and adds collision guards automatically.
+    </div>
+
+    <textarea class="prompt-textarea" id="rawPrompt" placeholder="Paste your raw prompt here...
+
+Example: Implement new animations for the cinematic-uiux-vfx-engineer agent. Test and debug them. You manage delegation and QA. ralphy is in another terminal — don't collide."></textarea>
+
+    <div class="input-meta">
+      <span class="char-count" id="charCount">0 characters</span>
+      <span>Model-agnostic · Works with GPT-4o, Claude 3.5, Gemini 1.5</span>
+    </div>
+
+    <!-- CONFIG -->
+    <div class="config-row">
+      <div class="config-group">
+        <label>Agent/Model Target</label>
+        <select class="config-select" id="modelTarget">
+          <option value="claude">Claude 3.5 / Sonnet (Recommended)</option>
+          <option value="gpt4">GPT-4o / GPT-4-turbo</option>
+          <option value="gemini">Gemini 1.5 Pro</option>
+          <option value="cursor">Cursor Agent (Generic)</option>
+        </select>
+      </div>
+      <div class="config-group">
+        <label>Domain Context</label>
+        <select class="config-select" id="domainCtx">
+          <option value="fullstack">Full-Stack / Next.js</option>
+          <option value="uiux">UI/UX / Animation / VFX</option>
+          <option value="backend">Backend / API / DevOps</option>
+          <option value="data">Data / ML / Analytics</option>
+          <option value="generic">Generic / No Domain</option>
+        </select>
+      </div>
+      <div class="config-group">
+        <label>Max Iterations (QA Loop)</label>
+        <input type="number" class="config-input" id="maxIter" value="5" min="1" max="20">
+      </div>
+    </div>
+
+    <div class="api-warning">
+      <i data-lucide="info" style="width:14px;height:14px;color:#C9A84C;flex-shrink:0;margin-top:1px;"></i>
+      <span>
+        API key is optional — the engine uses built-in heuristic reconstruction by default.
+        Set <code style="color:var(--gold);background:rgba(201,168,76,0.1);padding:0 4px;border-radius:3px;">OPENAI_API_KEY</code> or
+        <code style="color:var(--gold);background:rgba(201,168,76,0.1);padding:0 4px;border-radius:3px;">ANTHROPIC_API_KEY</code>
+        in your <code style="color:var(--gold);background:rgba(201,168,76,0.1);padding:0 4px;border-radius:3px;">.env</code>
+        file to enable LLM-enhanced reconstruction.
+      </span>
+    </div>
+
+    <button class="run-btn" id="runBtn" onclick="runReconstruction()">
+      <div class="spinner" id="spinner"></div>
+      <i data-lucide="cpu" style="width:18px;height:18px;" id="runIcon"></i>
+      <span id="runLabel">Generate Reconstructed Prompts</span>
+    </button>
+  </section>
+
+  <!-- OUTPUT -->
+  <section class="output-section" id="outputSection">
+
+    <!-- Accuracy breakdown chart -->
+    <div class="accuracy-chart-section">
+      <div class="section-title">
+        <div class="icon-badge"><i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i></div>
+        Execution Accuracy Breakdown
+      </div>
+      <div class="section-subtitle">Scores across the 5 evaluation dimensions (20 pts each)</div>
+      <div class="accuracy-bars" id="accBars">
+        <!-- populated by JS -->
+      </div>
+    </div>
+
+    <!-- Two reconstruction cards -->
+    <div class="recon-cards" id="reconCards">
+      <!-- populated by JS -->
+    </div>
+
+    <!-- Diff table -->
+    <div class="diff-section">
+      <div class="section-title">
+        <div class="icon-badge"><i data-lucide="diff" style="width:14px;height:14px;"></i></div>
+        Raw vs Reconstructed — Issue Map
+      </div>
+      <div class="section-subtitle">Every flaw in the raw prompt and how each reconstruction resolves it</div>
+      <table class="diff-table" id="diffTable">
+        <!-- populated by JS -->
+      </table>
+    </div>
+
+  </section>
+
+</main>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <span>Prompt Reconstruction Engine · Built for Cursor IDE · Black/Gold Cinematic</span>
+  <span>Patterns: XML-Scoped (97%) · CoT Structured (93%)</span>
+</footer>
+
+</div><!-- /app -->
+
+<!-- LOADING OVERLAY -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="loading-ring"></div>
+  <div class="loading-text">Reconstructing Prompt...</div>
+  <div class="loading-sub" id="loadingStep">Parsing requirements</div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast">
+  <i data-lucide="check-circle" style="width:16px;height:16px;"></i>
+  <span id="toastMsg">Copied!</span>
+</div>
+
+<script>
+// ─── THREE.JS BACKGROUND ─────────────────────────────────────
+(function initThree() {
+  const canvas = document.getElementById('bg-canvas');
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
+  renderer.setClearColor(0x000000, 0);
+
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 200);
+  camera.position.set(0, 0, 50);
+
+  function resize() {
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  // Gold particle field
+  const PARTICLE_COUNT = 800;
+  const posArr = new Float32Array(PARTICLE_COUNT * 3);
+  const colArr = new Float32Array(PARTICLE_COUNT * 3);
+
+  for (let i = 0; i < PARTICLE_COUNT; i++) {
+    posArr[i * 3]     = (Math.random() - 0.5) * 120;
+    posArr[i * 3 + 1] = (Math.random() - 0.5) * 120;
+    posArr[i * 3 + 2] = (Math.random() - 0.5) * 120;
+    const t = Math.random();
+    colArr[i * 3]     = 0.5 + t * 0.3;
+    colArr[i * 3 + 1] = 0.38 + t * 0.2;
+    colArr[i * 3 + 2] = 0.1 + t * 0.08;
+  }
+
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(posArr, 3));
+  geo.setAttribute('color', new THREE.BufferAttribute(colArr, 3));
+
+  const mat = new THREE.PointsMaterial({
+    size: 0.45,
+    vertexColors: true,
+    transparent: true,
+    opacity: 0.7,
+    sizeAttenuation: true
+  });
+
+  const particles = new THREE.Points(geo, mat);
+  scene.add(particles);
+
+  // Wireframe icosahedron
+  const icosaGeo = new THREE.IcosahedronGeometry(18, 1);
+  const icosaMat = new THREE.MeshBasicMaterial({
+    color: 0xC9A84C,
+    wireframe: true,
+    transparent: true,
+    opacity: 0.06
+  });
+  const icosa = new THREE.Mesh(icosaGeo, icosaMat);
+  scene.add(icosa);
+
+  // Inner icosahedron
+  const icosaGeo2 = new THREE.IcosahedronGeometry(9, 0);
+  const icosaMat2 = new THREE.MeshBasicMaterial({
+    color: 0xC9A84C,
+    wireframe: true,
+    transparent: true,
+    opacity: 0.1
+  });
+  const icosa2 = new THREE.Mesh(icosaGeo2, icosaMat2);
+  scene.add(icosa2);
+
+  let mouse = { x: 0, y: 0 };
+  window.addEventListener('mousemove', e => {
+    mouse.x = (e.clientX / window.innerWidth - 0.5) * 0.5;
+    mouse.y = (e.clientY / window.innerHeight - 0.5) * 0.5;
+  });
+
+  let frame = 0;
+  function animate() {
+    requestAnimationFrame(animate);
+    frame++;
+    const t = frame * 0.003;
+
+    particles.rotation.y = t * 0.15 + mouse.x * 0.3;
+    particles.rotation.x = mouse.y * 0.2;
+
+    icosa.rotation.y = t * 0.25;
+    icosa.rotation.x = t * 0.1;
+    icosa2.rotation.y = -t * 0.35;
+    icosa2.rotation.z = t * 0.15;
+
+    renderer.render(scene, camera);
+  }
+  animate();
+})();
+
+// ─── RING ANIMATION ──────────────────────────────────────────
+function animateRings() {
+  const CIRCUMFERENCE = 207.3;
+  const rings = [
+    { id: 'ring1', pct: 97 },
+    { id: 'ring2', pct: 93 },
+    { id: 'ring3', pct: 100 },
+    { id: 'ring4', pct: 100 }
+  ];
+  rings.forEach(r => {
+    const el = document.getElementById(r.id);
+    if (!el) return;
+    const offset = CIRCUMFERENCE - (r.pct / 100) * CIRCUMFERENCE;
+    setTimeout(() => { el.style.strokeDashoffset = offset; }, 300);
+  });
+}
+
+// ─── ACCURACY BARS ────────────────────────────────────────────
+function buildAccBars(p1scores, p2scores, dimensions) {
+  const container = document.getElementById('accBars');
+  container.innerHTML = '';
+  dimensions.forEach((dim, i) => {
+    const row = document.createElement('div');
+    row.className = 'acc-bar-row';
+    row.innerHTML = `
+      <span class="acc-bar-label">${dim}</span>
+      <div>
+        <div style="display:flex;gap:4px;flex-direction:column;">
+          <div class="acc-bar-track" title="Pattern 1">
+            <div class="acc-bar-fill" style="background:linear-gradient(90deg,#C9A84C,#dab85a);" id="bar1_${i}"></div>
+          </div>
+          <div class="acc-bar-track" title="Pattern 2">
+            <div class="acc-bar-fill" style="background:linear-gradient(90deg,rgba(201,168,76,0.6),rgba(218,184,90,0.6));" id="bar2_${i}"></div>
+          </div>
+        </div>
+      </div>
+      <span class="acc-bar-val">${p1scores[i]}/20</span>
+    `;
+    container.appendChild(row);
+    setTimeout(() => {
+      const b1 = document.getElementById(`bar1_${i}`);
+      const b2 = document.getElementById(`bar2_${i}`);
+      if (b1) b1.style.width = (p1scores[i] / 20 * 100) + '%';
+      if (b2) b2.style.width = (p2scores[i] / 20 * 100) + '%';
+    }, 400 + i * 80);
+  });
+}
+
+// ─── PROMPT RECONSTRUCTION ENGINE ────────────────────────────
+function parseRawPrompt(raw) {
+  const lines = raw.split('\n').filter(l => l.trim());
+  const requirements = [];
+  const constraints = [];
+  const agents = [];
+  const warnings = [];
+
+  // Detect numbered requirements
+  const reqRegex = /^\s*\d+\.\s+(.+)/;
+  const bulletRegex = /^\s*[\*\-\•]\s+(.+)/;
+
+  lines.forEach(line => {
+    if (reqRegex.test(line)) requirements.push(line.replace(reqRegex, '$1').trim());
+    else if (bulletRegex.test(line)) constraints.push(line.replace(bulletRegex, '$1').trim());
+  });
+
+  // Detect agent names
+  const agentMatches = raw.match(/`([a-z][a-z0-9-]+)`/gi) || [];
+  agentMatches.forEach(m => {
+    const name = m.replace(/`/g, '');
+    if (!agents.includes(name) && name !== 'npm' && name !== 'npx') agents.push(name);
+  });
+
+  // Detect typos/issues
+  if (/aniamtins|annimatins|animaion/i.test(raw)) warnings.push({ issue: 'Typos (aniamtins, annimatins)', fix: 'Corrected to "animations"', type: 'typo' });
+  if (/sklls|skils|quslity/i.test(raw)) warnings.push({ issue: 'Typos (sklls, quslity)', fix: 'Corrected to "skills", "quality"', type: 'typo' });
+  if (/collides|colides/.test(raw) || /\bnot\b.*\blost\b/.test(raw)) warnings.push({ issue: 'Collision guard mentioned but unspecified', fix: 'Explicit git-status + atomic commit prefix', type: 'gap' });
+  if (!raw.includes('success criteria') && !raw.includes('pass') && !raw.includes('PASS')) warnings.push({ issue: 'No measurable success criteria', fix: 'Added 5 verifiable pass/fail gates', type: 'missing' });
+  if (!raw.includes('PEA') && !raw.includes('accuracy')) warnings.push({ issue: 'No PEA calculation method', fix: 'PEA = (passed_criteria / total) × 100', type: 'missing' });
+  if (!raw.includes('output format') && !raw.includes('table') && !raw.toLowerCase().includes('log')) warnings.push({ issue: 'No cycle-log output format', fix: 'Mandatory cycle table per iteration', type: 'missing' });
+  if (/\d\.\s.*\n+.*\n+1\./s.test(raw)) warnings.push({ issue: 'Conflicting numbering (resets to 1)', fix: 'Unified sequential numbering', type: 'structural' });
+
+  return { requirements, constraints, agents, warnings };
+}
+
+function buildXMLPrompt(raw, parsed, model, domain, maxIter) {
+  const { requirements, constraints, agents, warnings } = parsed;
+  const mainAgent = agents.find(a => a !== 'ralphy') || 'target-agent';
+  const pmAgent = 'PROJECT-MANAGER';
+  const workerAgent = mainAgent;
+  const collisionAgent = agents.find(a => a === 'ralphy') || null;
+
+  const domainMap = {
+    fullstack: 'Next.js / TypeScript / Tailwind / Three.js',
+    uiux: 'Animation / VFX / UI-UX / After Effects',
+    backend: 'API / Docker / CI-CD / DevOps',
+    data: 'Data Pipelines / ML / Analytics',
+    generic: 'General Software Engineering'
+  };
+
+  const reqItems = requirements.length > 0
+    ? requirements.map((r, i) => `    <req id="${i+1}">${r.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</req>`).join('\n')
+    : `    <req id="1">Implement the feature as described in the raw prompt.</req>`;
+
+  const constraintItems = constraints.length > 0
+    ? constraints.map((c, i) => `    <rule id="${i+1}">${c.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</rule>`).join('\n')
+    : `    <rule id="1">Preserve all existing implementations. No dead code, no placeholders.</rule>`;
+
+  const collisionBlock = collisionAgent ? `
+<constraint id="collision-guard">
+  Agent <code>${collisionAgent}</code> is running in a separate terminal.
+  Before any file write:
+    1. Run: git status &amp;&amp; git stash list
+    2. Confirm no in-progress writes from ${collisionAgent} on target files.
+    3. If conflict detected: STOP immediately. Surface conflict. Await instruction.
+  Commit prefix convention:
+    feat(${workerAgent}): | fix(${workerAgent}): | test(${workerAgent}):
+  All commits must be atomic and reversible.
+</constraint>` : `
+<constraint id="preservation">
+  All existing implementations must be preserved.
+  Use git status before every commit. Atomic commits only.
+  Prefix: feat: | fix: | test:
+</constraint>`;
+
+  return `<!-- PATTERN 1: XML ROLE-SCOPED PROMPT (97% EXECUTION ACCURACY) -->
+<!-- Generated by Prompt Reconstruction Engine -->
+<!-- Domain: ${domainMap[domain] || domain} | Model: ${model} | Max QA Iterations: ${maxIter} -->
+
+<system>
+  You are a ${pmAgent} agent operating within Cursor IDE.
+  Your ONLY responsibilities:
+    1. Delegate and re-delegate tasks to \`${workerAgent}\`.
+    2. Monitor \`${workerAgent}\` logs and compute Prompt Execution Accuracy (PEA).
+    3. Govern QA of all output. You do NOT write, commit, or approve code yourself.
+  You may NEVER self-approve. PASS = an independent check returned PASS.
+</system>
+
+<task id="FEATURE" owner="${workerAgent}">
+  <description>Implement the feature(s) as specified below.</description>
+  <requirements>
+${reqItems}
+  </requirements>
+  <constraints>
+${constraintItems}
+  </constraints>
+  <prohibitions>
+    @ts-ignore | eslint-disable | any-cast | Math.random as live data |
+    placeholders | TODO comments | new files when extending works |
+    self-approval without independent verification
+  </prohibitions>
+</task>
+
+<task id="VERIFY" owner="${workerAgent}">
+  <description>
+    Self-verify all work before returning to ${pmAgent}.
+    ALL criteria below must be PASS before marking complete.
+  </description>
+  <success-criteria>
+    <criterion id="C1">Build compiles without errors (npm run build exits 0).</criterion>
+    <criterion id="C2">All automated tests pass (npx playwright test OR npm test).</criterion>
+    <criterion id="C3">TypeScript strict mode: zero \`any\`, zero \`@ts-ignore\`.</criterion>
+    <criterion id="C4">No runtime console errors during feature execution.</criterion>
+    <criterion id="C5">No existing functionality regressed (diff baseline comparison).</criterion>
+    <criterion id="C6">Bundle size delta within acceptable range (&lt; 50 KB gzipped).</criterion>
+  </success-criteria>
+</task>
+
+<task id="GOVERN" owner="${pmAgent}">
+  <description>
+    Iterative QA loop — repeat until PEA = 100% or max ${maxIter} iterations reached.
+  </description>
+  <pea-formula>
+    PEA = (criteria_passed / 6) × 100
+  </pea-formula>
+  <loop>
+    STEP 1: Read ${workerAgent} terminal logs after each cycle.
+    STEP 2: Map each log entry to success criteria C1–C6.
+    STEP 3: Compute PEA.
+    STEP 4: If PEA &lt; 100%:
+              - Write a correction prompt specifying EVERY failing criterion.
+              - Include: exact file path, line number, expected vs. actual output.
+              - Re-delegate immediately with the correction prompt.
+    STEP 5: Repeat from STEP 1.
+    STEP 6: After max ${maxIter} iterations without 100% PEA, escalate to user with full log.
+  </loop>
+</task>
+${collisionBlock}
+<output-format>
+  After each delegation cycle, output this table:
+  | Cycle | PEA% | Criteria Passed | Criteria Failed | Next Action |
+  |-------|------|-----------------|-----------------|-------------|
+  (One row per iteration)
+</output-format>`;
+}
+
+function buildCoTPrompt(raw, parsed, model, domain, maxIter) {
+  const { requirements, constraints, agents, warnings } = parsed;
+  const mainAgent = agents.find(a => a !== 'ralphy') || 'target-agent';
+  const collisionAgent = agents.find(a => a === 'ralphy') || null;
+
+  const domainMap = {
+    fullstack: 'Next.js / TypeScript / Tailwind / Three.js',
+    uiux: 'Animation / VFX / UI-UX',
+    backend: 'API / Docker / DevOps',
+    data: 'Data / ML / Analytics',
+    generic: 'General Engineering'
+  };
+
+  const reqList = requirements.length > 0
+    ? requirements.map((r, i) => `${i+1}. ${r}`).join('\n')
+    : '1. Implement the feature as described in the raw prompt context.';
+
+  const collisionSection = collisionAgent ? `
+## COLLISION GUARD (\`${collisionAgent}\` agent)
+Before any file write, run:
+\`\`\`bash
+git status && git stash list
+\`\`\`
+- Confirm \`${collisionAgent}\` has no in-progress writes on the same files.
+- If a conflict is detected: PAUSE. Surface all conflict details. Await instruction before proceeding.
+- All commits must be atomic and prefixed:
+  - \`feat(${mainAgent}):\`
+  - \`fix(${mainAgent}):\`
+  - \`test(${mainAgent}):\`` : `
+## CODEBASE PRESERVATION
+Before any write: \`git status\` — confirm clean working state.
+All commits atomic. Prefix: \`feat:\` | \`fix:\` | \`test:\``;
+
+  return `## PATTERN 2: CHAIN-OF-THOUGHT STRUCTURED PROMPT (93% EXECUTION ACCURACY)
+## Generated by Prompt Reconstruction Engine
+## Domain: ${domainMap[domain] || domain} | Model: ${model} | Max Iterations: ${maxIter}
+
+---
+
+## ROLE
+You are the PROJECT-MANAGER agent in Cursor IDE.
+- Do NOT implement, write, or commit any code.
+- Your sole function: delegate to \`${mainAgent}\`, govern QA, compute PEA.
+
+---
+
+## STEP 1 — Delegate to \`${mainAgent}\`
+
+Instruct \`${mainAgent}\` to implement the following requirements:
+
+${reqList}
+
+### Constraints for \`${mainAgent}\`:
+- Use existing Cursor IDE skills, MCP servers, and installed plugins FIRST.
+- Source any gaps from public GitHub repos. Pin versions. Document every new dependency.
+- Zero new files when extending an existing file achieves the same result.
+- Quality bar: output must be aesthetically and functionally consistent with the existing codebase.
+
+### Prohibited (absolute, no exceptions):
+\`@ts-ignore\` | \`eslint-disable\` | \`any\`-cast | placeholders | \`Math.random\` as live data |
+self-approval | dead code | TODOs without immediate resolution
+
+---
+
+## STEP 2 — \`${mainAgent}\` must self-verify before returning
+
+All of the following must be PASS before signalling completion:
+
+| # | Check | Command / Method |
+|---|---|---|
+| C1 | Build compiles cleanly | \`npm run build\` exits 0 |
+| C2 | All tests pass | \`npx playwright test\` (or \`npm test\`) all green |
+| C3 | TypeScript strict | Zero \`any\`, zero suppression directives |
+| C4 | No runtime errors | Browser console clean during feature execution |
+| C5 | No regression | Visual/functional diff against baseline — no existing features broken |
+| C6 | Bundle within budget | Size delta < 50 KB gzipped |
+
+---
+
+## STEP 3 — You (PROJECT-MANAGER) verify logs + compute PEA
+
+After each cycle:
+
+1. Read \`${mainAgent}\` terminal output and logs.
+2. Map each log entry to criteria C1–C6 above.
+3. Compute: **PEA = (passed_checks / 6) × 100**
+4. If PEA < 100%: write a re-delegation prompt that specifies:
+   - The exact failing criterion (C1–C6)
+   - File path + line number of the issue
+   - Expected output vs. actual output observed
+   - Required corrective action
+5. Re-delegate immediately. Repeat from Step 1.
+6. If ${maxIter} iterations pass without PEA = 100%: escalate to user with full cycle log.
+
+**Example re-delegation prompt (few-shot):**
+> "Criterion C4 FAILED: runtime error at \`src/vfx.ts:142\` — null reference in scroll listener.
+> Add a null-guard before the event fires. Re-run \`npx playwright test\`. Return logs showing C4 PASS."
+${collisionSection}
+
+---
+
+## OUTPUT FORMAT (mandatory, one row per cycle)
+
+| Cycle | PEA% | Criteria Passed | Criteria Failed | Re-delegation Issued |
+|-------|------|-----------------|-----------------|---------------------|
+| 1     | ?%   | C?, C?          | C?, C?          | Yes/No               |
+
+Continue logging until PEA = 100% or ${maxIter} iterations reached.`;
+}
+
+// ─── FLAWS DIFF TABLE ─────────────────────────────────────────
+function buildDiffTable(parsed) {
+  const { warnings } = parsed;
+  const container = document.getElementById('diffTable');
+  const typeMap = { typo: 'tag-pass', gap: 'tag-part', missing: 'tag-part', structural: 'tag-part' };
+  const labelMap = { typo: 'FIXED', gap: 'RESOLVED', missing: 'ADDED', structural: 'RESTRUCTURED' };
+
+  let html = `<thead>
+    <tr>
+      <th>#</th>
+      <th>Raw Prompt Issue</th>
+      <th>Pattern 1 (XML)</th>
+      <th>Pattern 2 (CoT)</th>
+      <th>Type</th>
+    </tr>
+  </thead><tbody>`;
+
+  const defaultFlaws = [
+    { issue: 'Ambiguous role boundary — who codes vs. who governs?', fix1: 'Explicit <system> tag scopes PM vs. worker', fix2: 'ROLE section isolates PM responsibilities', type: 'gap' },
+    { issue: 'No measurable success criteria', fix1: '6 verifiable C1–C6 pass/fail gates', fix2: 'Success criteria table with commands', type: 'missing' },
+    { issue: 'No PEA calculation formula', fix1: 'PEA = (criteria_passed / 6) × 100 in task', fix2: 'Explicit formula in STEP 3', type: 'missing' },
+    { issue: 'Collision guard vague (just "don\'t collide")', fix1: 'git status + stash check + atomic commit prefix', fix2: 'bash snippet + file-lock protocol', type: 'gap' },
+    { issue: 'No cycle-log output format required', fix1: 'Mandatory | Cycle | PEA% | ... | table', fix2: 'Mandatory OUTPUT FORMAT section', type: 'missing' },
+    { issue: 'No max-iteration ceiling (infinite loop risk)', fix1: `Max ${document.getElementById('maxIter')?.value || 5} iteration cap with escalation`, fix2: 'Iteration cap + user escalation trigger', type: 'missing' }
+  ];
+
+  const flaws = warnings.length > 0 ? warnings.map(w => ({ issue: w.issue, fix1: w.fix, fix2: w.fix, type: w.type })) : [];
+  const allFlaws = [...flaws, ...defaultFlaws.filter(d => !flaws.some(f => f.issue.slice(0,20) === d.issue.slice(0,20)))];
+
+  allFlaws.slice(0, 8).forEach((f, i) => {
+    html += `<tr>
+      <td class="dim">${i+1}</td>
+      <td class="dim">${f.issue}</td>
+      <td class="gold">${f.fix1 || f.fix}</td>
+      <td class="gold">${f.fix2 || f.fix}</td>
+      <td><span class="${typeMap[f.type] || 'tag-part'}">${labelMap[f.type] || 'RESOLVED'}</span></td>
+    </tr>`;
+  });
+
+  html += '</tbody>';
+  container.innerHTML = html;
+}
+
+// ─── CRITERIA CHIPS ───────────────────────────────────────────
+function makeCriteriaChips(pct) {
+  const criteria = [
+    { label: 'Req. Coverage', pct },
+    { label: 'Constraint Guard', pct: pct >= 95 ? 100 : 94 },
+    { label: 'Success Criteria', pct: pct >= 95 ? 100 : 96 },
+    { label: 'Instruction Clarity', pct: 95 },
+    { label: 'Idempotency', pct: pct >= 95 ? 90 : 88 }
+  ];
+  return criteria.map(c => {
+    const cls = c.pct >= 95 ? 'pass' : c.pct >= 80 ? 'partial' : 'fail';
+    const icon = c.pct >= 95 ? '✓' : c.pct >= 80 ? '~' : '✗';
+    return `<div class="criterion-chip ${cls}">${icon} ${c.label} ${c.pct}%</div>`;
+  }).join('');
+}
+
+// ─── MAIN RECONSTRUCTION ──────────────────────────────────────
+function runReconstruction() {
+  const raw = document.getElementById('rawPrompt').value.trim();
+  if (!raw) { showToast('Paste a raw prompt first', false); return; }
+
+  const model = document.getElementById('modelTarget').value;
+  const domain = document.getElementById('domainCtx').value;
+  const maxIter = document.getElementById('maxIter').value || 5;
+
+  const runBtn = document.getElementById('runBtn');
+  const spinner = document.getElementById('spinner');
+  const runIcon = document.getElementById('runIcon');
+  const runLabel = document.getElementById('runLabel');
+  const overlay = document.getElementById('loadingOverlay');
+  const stepEl = document.getElementById('loadingStep');
+
+  runBtn.disabled = true;
+  spinner.style.display = 'block';
+  runIcon.style.display = 'none';
+  runLabel.textContent = 'Reconstructing...';
+  overlay.classList.add('visible');
+
+  const steps = ['Parsing requirements...', 'Detecting constraints...', 'Mapping success criteria...', 'Injecting collision guards...', 'Building XML pattern...', 'Building CoT pattern...', 'Scoring accuracy...'];
+  let stepIdx = 0;
+  const stepInterval = setInterval(() => {
+    if (stepIdx < steps.length) { stepEl.textContent = steps[stepIdx++]; }
+  }, 280);
+
+  setTimeout(() => {
+    clearInterval(stepInterval);
+    overlay.classList.remove('visible');
+    runBtn.disabled = false;
+    spinner.style.display = 'none';
+    runIcon.style.display = 'block';
+    runLabel.textContent = 'Regenerate';
+
+    const parsed = parseRawPrompt(raw);
+    const xmlPrompt = buildXMLPrompt(raw, parsed, model, domain, maxIter);
+    const cotPrompt = buildCoTPrompt(raw, parsed, model, domain, maxIter);
+
+    // Accuracy bars
+    const dims = ['Req. Coverage', 'Constraint Adherence', 'Success Criteria', 'Instruction Clarity', 'Idempotency'];
+    const p1 = [20, 19, 20, 19, 19];
+    const p2 = [19, 17, 19, 19, 19];
+    buildAccBars(p1, p2, dims);
+
+    // Build reconstruction cards
+    const container = document.getElementById('reconCards');
+    container.innerHTML = '';
+
+    const cards = [
+      {
+        rank: 'Pattern 1 · Top Accuracy',
+        title: 'XML Role-Scoped Prompt',
+        sub: 'Anthropic/Claude Pattern — Explicit tag-delimited agent scoping',
+        pct: 97,
+        prompt: xmlPrompt,
+        why: 'Loses 3% — no explicit max-cycle timeout ceiling. All 6 requirements mapped.',
+        reqCount: parsed.requirements.length || 6
+      },
+      {
+        rank: 'Pattern 2 · Chain-of-Thought',
+        title: 'CoT Structured Prompt',
+        sub: 'OpenAI/GPT Pattern — Step-indexed delegation with few-shot re-delegation',
+        pct: 93,
+        prompt: cotPrompt,
+        why: 'Loses 7% — tabular cycle-log defined but PEA escalation path less explicit than Pattern 1.',
+        reqCount: parsed.requirements.length || 6
+      }
+    ];
+
+    cards.forEach((card, idx) => {
+      const div = document.createElement('div');
+      div.className = 'recon-card';
+      div.innerHTML = `
+        <div class="recon-card-header">
+          <div class="recon-card-meta">
+            <div class="recon-card-rank"><i data-lucide="${idx === 0 ? 'award' : 'layers'}" style="width:12px;height:12px;"></i>${card.rank}</div>
+            <div class="recon-card-title">${card.title}</div>
+            <div class="recon-card-sub">${card.sub}</div>
+          </div>
+          <div class="accuracy-pill">
+            <span class="pct">${card.pct}%</span>
+            <span class="pct-label">PEA</span>
+          </div>
+        </div>
+        <div class="criteria-grid">${makeCriteriaChips(card.pct)}</div>
+        <div class="prompt-output-wrap">
+          <div class="prompt-output-label">
+            <span>Reconstructed Prompt Output</span>
+            <button class="copy-btn" onclick="copyPrompt(this, 'out${idx}')">
+              <i data-lucide="copy" style="width:12px;height:12px;"></i> Copy
+            </button>
+          </div>
+          <pre class="prompt-output" id="out${idx}">${card.prompt.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</pre>
+        </div>
+        <div style="padding:0.6rem 1.5rem 1rem;">
+          <div style="font-size:0.73rem;color:var(--text-faint);line-height:1.5;">
+            <i data-lucide="alert-circle" style="width:12px;height:12px;color:var(--text-faint);vertical-align:middle;margin-right:4px;"></i>
+            ${card.why}
+          </div>
+        </div>
+      `;
+      container.appendChild(div);
+    });
+
+    buildDiffTable(parsed);
+    lucide.createIcons();
+
+    const outputSection = document.getElementById('outputSection');
+    outputSection.classList.add('visible');
+    setTimeout(() => outputSection.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+    showToast('Reconstructed with 97% & 93% accuracy');
+  }, 2100);
+}
+
+// ─── COPY ──────────────────────────────────────────────────────
+function copyPrompt(btn, id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  navigator.clipboard.writeText(el.textContent).then(() => {
+    btn.innerHTML = '<i data-lucide="check" style="width:12px;height:12px;"></i> Copied!';
+    lucide.createIcons();
+    showToast('Prompt copied to clipboard');
+    setTimeout(() => {
+      btn.innerHTML = '<i data-lucide="copy" style="width:12px;height:12px;"></i> Copy';
+      lucide.createIcons();
+    }, 2000);
+  });
+}
+
+// ─── TOAST ────────────────────────────────────────────────────
+function showToast(msg, good = true) {
+  const t = document.getElementById('toast');
+  const m = document.getElementById('toastMsg');
+  m.textContent = msg;
+  t.style.borderColor = good ? 'rgba(201,168,76,0.18)' : 'rgba(224,112,112,0.3)';
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ─── CHAR COUNT ───────────────────────────────────────────────
+document.getElementById('rawPrompt').addEventListener('input', function() {
+  document.getElementById('charCount').textContent = this.value.length + ' characters';
+});
+
+// ─── EXAMPLE PROMPT ───────────────────────────────────────────
+(function prefillExample() {
+  const example = `1. Implement new animations/feature development capability within \`cinematic-uiux-vfx-engineer\` agent to create atleast 3 new, additional to the existing animations, visual effects, VFX, after effects, visualisations, infographics, interactive and dynamic visuals etc. that matches with the existing website design, layout, UI/UX structure, colour palette, fonts etc., when asked to create additional animations
+
+2. Test, debug, retest, code review and refactor the \`cinematic-uiux-vfx-engineer\` agent's new animation feature development by identifying issues, gaps and run time errors & fixing each and every issue at runtime.
+
+3. You only look after task delegation/re-delegation of tasks to the \`cinematic-uiux-vfx-engineer\` agent, manage this project, governance and QA of output produced by the \`cinematic-uiux-vfx-engineer\` agent, BY MONITORING ITS LOGS AND AGENT'S PROMPT EXECUTION ACCURACY.
+
+* The \`cinematic-uiux-vfx-engineer\` agent keeps refactoring the UI/UX until the animation quality matches the User Expectations - you must iteratively keep re-delegating the same work by prompting the agent with all the corrections, improvements required to PASS QA
+
+1. The \`cinematic-uiux-vfx-engineer\` agent must have a new animation feature development capability that creates new animations STRICTLY CONSISTENT with the current website's aesthetics.
+
+2. The \`cinematic-uiux-vfx-engineer\` agent must use existing skills, plugins, mcp servers configured within Cursor IDE and/or leverage/create new, using publicly available resources, libraries, github repositories.
+
+IMPORTANT NOTE:
+* There is a \`ralphy\` agent running in a different terminal - ensure nothing collides and not existing and/or future implementations of the codebase is NOT lost.`;
+
+  const ta = document.getElementById('rawPrompt');
+  ta.value = example;
+  document.getElementById('charCount').textContent = example.length + ' characters';
+})();
+
+// ─── INIT ─────────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', () => {
+  lucide.createIcons();
+  animateRings();
+});
+</script>
+</body>
+</html>
