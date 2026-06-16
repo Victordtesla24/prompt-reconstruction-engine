@@ -3,7 +3,6 @@
 *-debug.log
 .runtimeconfig.json
 .env.local
-.env.prompt-engine
 
 # Dependencies
 node_modules/
