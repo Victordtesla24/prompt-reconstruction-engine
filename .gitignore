@@ -16,3 +16,7 @@ Thumbs.db
 .vscode/
 *.swp
 *.swo
+
+# Transient task-runner / agent state
+.juno_task/
+.env

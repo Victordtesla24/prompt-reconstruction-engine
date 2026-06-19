@@ -1,0 +1,12 @@
+{
+  "name": "prompt-reconstruction-engine",
+  "version": "2.0.0",
+  "private": true,
+  "description": "Reconstructs raw prompts into precision-engineered system prompts that maximise coding-agent execution accuracy (Claude Opus 4.8, DeepSeek V4 Pro, OpenRouter open-source frontier).",
+  "scripts": {
+    "test": "node --test tests/engine.test.cjs",
+    "syntax": "python3 .github/workflows/check_js_syntax.py",
+    "server": "node server/reconstruct-server.cjs"
+  },
+  "license": "MIT"
+}

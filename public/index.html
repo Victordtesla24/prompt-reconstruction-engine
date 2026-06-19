@@ -16,6 +16,13 @@
 <!-- Lucide -->
 <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
 
+<!-- Live-AI backend: set content to your VPS reconstruct URL (e.g. https://<host>.<tailnet>.ts.net)
+     to enable OpenRouter reconstruction. Empty = deterministic-only (fully functional, no backend). -->
+<meta name="recon-api-base" content="">
+
+<!-- Reconstruction core (spec v2) — shared by frontend + VPS backend -->
+<script src="engine.core.js"></script>
+
 <style>
 /* ─── TOKENS ────────────────────────────────────────────────── */
 :root {
@@ -842,7 +849,7 @@ body {
   </div>
   <div class="header-badge">
     <i data-lucide="zap" style="width:12px;height:12px;"></i>
-    Top-2 Patterns · 97% + 93%
+    Spec v2 · SDLC-Mandated
   </div>
 </header>
 
@@ -854,37 +861,37 @@ body {
     <div class="hero-eyebrow">AI Prompt Engineering · Cursor IDE Ready</div>
     <h1>Raw Prompt → <em>Maximum</em><br>Execution Accuracy</h1>
     <p class="hero-desc">
-      Reconstructs any raw user prompt into the two highest-accuracy patterns:
-      XML Role-Scoped (97%) and Chain-of-Thought Structured (93%).
-      Every requirement, constraint, and success criterion is mapped and verified.
+      Reconstructs any raw prompt into a precision-engineered system prompt — a 5-layer
+      structure with a non-skippable plan → build → test → … → deploy → verify loop, adapted
+      per target model. Every requirement, constraint and success criterion is mapped and verified.
     </p>
   </section>
 
   <!-- ACCURACY METERS -->
   <div class="meters-row" id="metersRow">
     <div class="meter-card">
-      <div class="meter-label">Pattern 1 · XML-Scoped</div>
+      <div class="meter-label">Primary · Target-tuned</div>
       <div class="meter-ring">
         <svg width="80" height="80" viewBox="0 0 80 80">
           <circle cx="40" cy="40" r="33" stroke="rgba(201,168,76,0.12)" stroke-width="7" fill="none"/>
           <circle cx="40" cy="40" r="33" stroke="#C9A84C" stroke-width="7" fill="none"
             stroke-dasharray="207.3" stroke-dashoffset="207.3" stroke-linecap="round" id="ring1"/>
         </svg>
-        <div class="meter-pct" id="pct1">97%</div>
+        <div class="meter-pct" id="pct1">—</div>
       </div>
-      <div class="meter-name">XML Structured</div>
+      <div class="meter-name">Optimised</div>
     </div>
     <div class="meter-card">
-      <div class="meter-label">Pattern 2 · CoT Structured</div>
+      <div class="meter-label">Portable · Agnostic</div>
       <div class="meter-ring">
         <svg width="80" height="80" viewBox="0 0 80 80">
           <circle cx="40" cy="40" r="33" stroke="rgba(201,168,76,0.12)" stroke-width="7" fill="none"/>
           <circle cx="40" cy="40" r="33" stroke="#C9A84C" stroke-width="7" fill="none"
             stroke-dasharray="207.3" stroke-dashoffset="207.3" stroke-linecap="round" id="ring2"/>
         </svg>
-        <div class="meter-pct" id="pct2">93%</div>
+        <div class="meter-pct" id="pct2">—</div>
       </div>
-      <div class="meter-name">CoT Structured</div>
+      <div class="meter-name">Universal</div>
     </div>
     <div class="meter-card">
       <div class="meter-label">Req. Coverage</div>
@@ -929,7 +936,7 @@ Example: Implement new animations for the cinematic-uiux-vfx-engineer agent. Tes
 
     <div class="input-meta">
       <span class="char-count" id="charCount">0 characters</span>
-      <span>Model-agnostic · Works with GPT-4o, Claude 3.5, Gemini 1.5</span>
+      <span>Optimised for Claude Opus 4.8, DeepSeek V4 Pro &amp; the OpenRouter open-source frontier</span>
     </div>
 
     <!-- CONFIG -->
@@ -937,15 +944,21 @@ Example: Implement new animations for the cinematic-uiux-vfx-engineer agent. Tes
       <div class="config-group">
         <label>Agent/Model Target</label>
         <select class="config-select" id="modelTarget">
-          <option value="claude">Claude 3.5 / Sonnet (Recommended)</option>
-          <option value="gpt4">GPT-4o / GPT-4-turbo</option>
-          <option value="gemini">Gemini 1.5 Pro</option>
-          <option value="cursor">Cursor Agent (Generic)</option>
+          <option value="claude-opus-4-8">Claude Opus 4.8 · 1M · high effort (Recommended)</option>
+          <option value="deepseek-v4-pro">DeepSeek V4 Pro · 1M · &lt;think&gt;</option>
+          <option value="glm-5-2">GLM-5.2 · hybrid · strict · latest</option>
+          <option value="glm-4-7">GLM-4.7 · hybrid · strict</option>
+          <option value="qwen3-coder-next">Qwen3-Coder-Next · 256K · agentic</option>
+          <option value="kimi-k2-7-code">Kimi K2.7 Code · always-think</option>
+          <option value="codestral-2508">Codestral 2508 / Devstral · FIM</option>
+          <option value="llama-4-maverick">Llama 4 Maverick</option>
+          <option value="generic">Generic / Model-agnostic</option>
         </select>
       </div>
       <div class="config-group">
         <label>Domain Context</label>
         <select class="config-select" id="domainCtx">
+          <option value="auto">Auto-detect from prompt</option>
           <option value="fullstack">Full-Stack / Next.js</option>
           <option value="uiux">UI/UX / Animation / VFX</option>
           <option value="backend">Backend / API / DevOps</option>
@@ -960,13 +973,15 @@ Example: Implement new animations for the cinematic-uiux-vfx-engineer agent. Tes
     </div>
 
     <div class="api-warning">
-      <i data-lucide="info" style="width:14px;height:14px;color:#C9A84C;flex-shrink:0;margin-top:1px;"></i>
+      <i data-lucide="sparkles" style="width:14px;height:14px;color:#C9A84C;flex-shrink:0;margin-top:1px;"></i>
       <span>
-        API key is optional — the engine uses built-in heuristic reconstruction by default.
-        Set <code style="color:var(--gold);background:rgba(201,168,76,0.1);padding:0 4px;border-radius:3px;">OPENAI_API_KEY</code> or
-        <code style="color:var(--gold);background:rgba(201,168,76,0.1);padding:0 4px;border-radius:3px;">ANTHROPIC_API_KEY</code>
-        in your <code style="color:var(--gold);background:rgba(201,168,76,0.1);padding:0 4px;border-radius:3px;">.env</code>
-        file to enable LLM-enhanced reconstruction.
+        <label style="display:inline-flex;align-items:center;gap:8px;cursor:pointer;">
+          <input type="checkbox" id="aiToggle" style="accent-color:var(--gold);width:14px;height:14px;cursor:pointer;">
+          <strong style="color:var(--gold);">Live AI reconstruction</strong>
+        </label>
+        — when enabled, a current open-source model on OpenRouter
+        (<code style="color:var(--gold);background:rgba(201,168,76,0.1);padding:0 4px;border-radius:3px;">z-ai/glm-5.2</code> → <code style="color:var(--gold);background:rgba(201,168,76,0.1);padding:0 4px;border-radius:3px;">deepseek/deepseek-v4-pro</code>)
+        performs the reconstruction through the secure backend. Off by default; the deterministic built-in engine runs instantly and is always the fallback.
       </span>
     </div>
 
@@ -1016,7 +1031,7 @@ Example: Implement new animations for the cinematic-uiux-vfx-engineer agent. Tes
 <!-- FOOTER -->
 <footer class="footer">
   <span>Prompt Reconstruction Engine · Built for Cursor IDE · Black/Gold Cinematic</span>
-  <span>Patterns: XML-Scoped (97%) · CoT Structured (93%)</span>
+  <span>Spec v2 · 5-layer structure · mandated SDLC loop · per-model adaptation</span>
 </footer>
 
 </div><!-- /app -->
@@ -1135,8 +1150,8 @@ Example: Implement new animations for the cinematic-uiux-vfx-engineer agent. Tes
 function animateRings() {
   const CIRCUMFERENCE = 207.3;
   const rings = [
-    { id: 'ring1', pct: 97 },
-    { id: 'ring2', pct: 93 },
+    { id: 'ring1', pct: 0 },
+    { id: 'ring2', pct: 0 },
     { id: 'ring3', pct: 100 },
     { id: 'ring4', pct: 100 }
   ];
@@ -1159,10 +1174,10 @@ function buildAccBars(p1scores, p2scores, dimensions) {
       <span class="acc-bar-label">${dim}</span>
       <div>
         <div style="display:flex;gap:4px;flex-direction:column;">
-          <div class="acc-bar-track" title="Pattern 1">
+          <div class="acc-bar-track" title="Primary">
             <div class="acc-bar-fill" style="background:linear-gradient(90deg,#C9A84C,#dab85a);" id="bar1_${i}"></div>
           </div>
-          <div class="acc-bar-track" title="Pattern 2">
+          <div class="acc-bar-track" title="Portable">
             <div class="acc-bar-fill" style="background:linear-gradient(90deg,rgba(201,168,76,0.6),rgba(218,184,90,0.6));" id="bar2_${i}"></div>
           </div>
         </div>
@@ -1179,320 +1194,124 @@ function buildAccBars(p1scores, p2scores, dimensions) {
   });
 }
 
-// ─── PROMPT RECONSTRUCTION ENGINE ────────────────────────────
-function parseRawPrompt(raw) {
-  const lines = raw.split('\n').filter(l => l.trim());
-  const requirements = [];
-  const constraints = [];
-  const agents = [];
-  const warnings = [];
+// ─── RECONSTRUCTION CORE ──────────────────────────
+// parseRawPrompt / buildSystemPrompt / reconstruct now live in engine.core.js
+// (window.PRE), shared with the VPS backend. See public/engine.core.js.
 
-  // Detect numbered requirements
-  const reqRegex = /^\s*\d+\.\s+(.+)/;
-  const bulletRegex = /^\s*[\*\-\•]\s+(.+)/;
-
-  lines.forEach(line => {
-    if (reqRegex.test(line)) requirements.push(line.replace(reqRegex, '$1').trim());
-    else if (bulletRegex.test(line)) constraints.push(line.replace(bulletRegex, '$1').trim());
-  });
-
-  // Detect agent names
-  const agentMatches = raw.match(/`([a-z][a-z0-9-]+)`/gi) || [];
-  agentMatches.forEach(m => {
-    const name = m.replace(/`/g, '');
-    if (!agents.includes(name) && name !== 'npm' && name !== 'npx') agents.push(name);
-  });
-
-  // Detect typos/issues
-  if (/aniamtins|annimatins|animaion/i.test(raw)) warnings.push({ issue: 'Typos (aniamtins, annimatins)', fix: 'Corrected to "animations"', type: 'typo' });
-  if (/sklls|skils|quslity/i.test(raw)) warnings.push({ issue: 'Typos (sklls, quslity)', fix: 'Corrected to "skills", "quality"', type: 'typo' });
-  if (/collides|colides/.test(raw) || /\bnot\b.*\blost\b/.test(raw)) warnings.push({ issue: 'Collision guard mentioned but unspecified', fix: 'Explicit git-status + atomic commit prefix', type: 'gap' });
-  if (!raw.includes('success criteria') && !raw.includes('pass') && !raw.includes('PASS')) warnings.push({ issue: 'No measurable success criteria', fix: 'Added 5 verifiable pass/fail gates', type: 'missing' });
-  if (!raw.includes('PEA') && !raw.includes('accuracy')) warnings.push({ issue: 'No PEA calculation method', fix: 'PEA = (passed_criteria / total) × 100', type: 'missing' });
-  if (!raw.includes('output format') && !raw.includes('table') && !raw.toLowerCase().includes('log')) warnings.push({ issue: 'No cycle-log output format', fix: 'Mandatory cycle table per iteration', type: 'missing' });
-  if (/\d\.\s.*\n+.*\n+1\./s.test(raw)) warnings.push({ issue: 'Conflicting numbering (resets to 1)', fix: 'Unified sequential numbering', type: 'structural' });
-
-  return { requirements, constraints, agents, warnings };
-}
-
-function buildXMLPrompt(raw, parsed, model, domain, maxIter) {
-  const { requirements, constraints, agents, warnings } = parsed;
-  const mainAgent = agents.find(a => a !== 'ralphy') || 'target-agent';
-  const pmAgent = 'PROJECT-MANAGER';
-  const workerAgent = mainAgent;
-  const collisionAgent = agents.find(a => a === 'ralphy') || null;
-
-  const domainMap = {
-    fullstack: 'Next.js / TypeScript / Tailwind / Three.js',
-    uiux: 'Animation / VFX / UI-UX / After Effects',
-    backend: 'API / Docker / CI-CD / DevOps',
-    data: 'Data Pipelines / ML / Analytics',
-    generic: 'General Software Engineering'
-  };
-
-  const reqItems = requirements.length > 0
-    ? requirements.map((r, i) => `    <req id="${i+1}">${r.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</req>`).join('\n')
-    : `    <req id="1">Implement the feature as described in the raw prompt.</req>`;
-
-  const constraintItems = constraints.length > 0
-    ? constraints.map((c, i) => `    <rule id="${i+1}">${c.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</rule>`).join('\n')
-    : `    <rule id="1">Preserve all existing implementations. No dead code, no placeholders.</rule>`;
-
-  const collisionBlock = collisionAgent ? `
-<constraint id="collision-guard">
-  Agent <code>${collisionAgent}</code> is running in a separate terminal.
-  Before any file write:
-    1. Run: git status &amp;&amp; git stash list
-    2. Confirm no in-progress writes from ${collisionAgent} on target files.
-    3. If conflict detected: STOP immediately. Surface conflict. Await instruction.
-  Commit prefix convention:
-    feat(${workerAgent}): | fix(${workerAgent}): | test(${workerAgent}):
-  All commits must be atomic and reversible.
-</constraint>` : `
-<constraint id="preservation">
-  All existing implementations must be preserved.
-  Use git status before every commit. Atomic commits only.
-  Prefix: feat: | fix: | test:
-</constraint>`;
-
-  return `<!-- PATTERN 1: XML ROLE-SCOPED PROMPT (97% EXECUTION ACCURACY) -->
-<!-- Generated by Prompt Reconstruction Engine -->
-<!-- Domain: ${domainMap[domain] || domain} | Model: ${model} | Max QA Iterations: ${maxIter} -->
-
-<system>
-  You are a ${pmAgent} agent operating within Cursor IDE.
-  Your ONLY responsibilities:
-    1. Delegate and re-delegate tasks to \`${workerAgent}\`.
-    2. Monitor \`${workerAgent}\` logs and compute Prompt Execution Accuracy (PEA).
-    3. Govern QA of all output. You do NOT write, commit, or approve code yourself.
-  You may NEVER self-approve. PASS = an independent check returned PASS.
-</system>
-
-<task id="FEATURE" owner="${workerAgent}">
-  <description>Implement the feature(s) as specified below.</description>
-  <requirements>
-${reqItems}
-  </requirements>
-  <constraints>
-${constraintItems}
-  </constraints>
-  <prohibitions>
-    @ts-ignore | eslint-disable | any-cast | Math.random as live data |
-    placeholders | TODO comments | new files when extending works |
-    self-approval without independent verification
-  </prohibitions>
-</task>
-
-<task id="VERIFY" owner="${workerAgent}">
-  <description>
-    Self-verify all work before returning to ${pmAgent}.
-    ALL criteria below must be PASS before marking complete.
-  </description>
-  <success-criteria>
-    <criterion id="C1">Build compiles without errors (npm run build exits 0).</criterion>
-    <criterion id="C2">All automated tests pass (npx playwright test OR npm test).</criterion>
-    <criterion id="C3">TypeScript strict mode: zero \`any\`, zero \`@ts-ignore\`.</criterion>
-    <criterion id="C4">No runtime console errors during feature execution.</criterion>
-    <criterion id="C5">No existing functionality regressed (diff baseline comparison).</criterion>
-    <criterion id="C6">Bundle size delta within acceptable range (&lt; 50 KB gzipped).</criterion>
-  </success-criteria>
-</task>
-
-<task id="GOVERN" owner="${pmAgent}">
-  <description>
-    Iterative QA loop — repeat until PEA = 100% or max ${maxIter} iterations reached.
-  </description>
-  <pea-formula>
-    PEA = (criteria_passed / 6) × 100
-  </pea-formula>
-  <loop>
-    STEP 1: Read ${workerAgent} terminal logs after each cycle.
-    STEP 2: Map each log entry to success criteria C1–C6.
-    STEP 3: Compute PEA.
-    STEP 4: If PEA &lt; 100%:
-              - Write a correction prompt specifying EVERY failing criterion.
-              - Include: exact file path, line number, expected vs. actual output.
-              - Re-delegate immediately with the correction prompt.
-    STEP 5: Repeat from STEP 1.
-    STEP 6: After max ${maxIter} iterations without 100% PEA, escalate to user with full log.
-  </loop>
-</task>
-${collisionBlock}
-<output-format>
-  After each delegation cycle, output this table:
-  | Cycle | PEA% | Criteria Passed | Criteria Failed | Next Action |
-  |-------|------|-----------------|-----------------|-------------|
-  (One row per iteration)
-</output-format>`;
-}
-
-function buildCoTPrompt(raw, parsed, model, domain, maxIter) {
-  const { requirements, constraints, agents, warnings } = parsed;
-  const mainAgent = agents.find(a => a !== 'ralphy') || 'target-agent';
-  const collisionAgent = agents.find(a => a === 'ralphy') || null;
-
-  const domainMap = {
-    fullstack: 'Next.js / TypeScript / Tailwind / Three.js',
-    uiux: 'Animation / VFX / UI-UX',
-    backend: 'API / Docker / DevOps',
-    data: 'Data / ML / Analytics',
-    generic: 'General Engineering'
-  };
-
-  const reqList = requirements.length > 0
-    ? requirements.map((r, i) => `${i+1}. ${r}`).join('\n')
-    : '1. Implement the feature as described in the raw prompt context.';
-
-  const collisionSection = collisionAgent ? `
-## COLLISION GUARD (\`${collisionAgent}\` agent)
-Before any file write, run:
-\`\`\`bash
-git status && git stash list
-\`\`\`
-- Confirm \`${collisionAgent}\` has no in-progress writes on the same files.
-- If a conflict is detected: PAUSE. Surface all conflict details. Await instruction before proceeding.
-- All commits must be atomic and prefixed:
-  - \`feat(${mainAgent}):\`
-  - \`fix(${mainAgent}):\`
-  - \`test(${mainAgent}):\`` : `
-## CODEBASE PRESERVATION
-Before any write: \`git status\` — confirm clean working state.
-All commits atomic. Prefix: \`feat:\` | \`fix:\` | \`test:\``;
-
-  return `## PATTERN 2: CHAIN-OF-THOUGHT STRUCTURED PROMPT (93% EXECUTION ACCURACY)
-## Generated by Prompt Reconstruction Engine
-## Domain: ${domainMap[domain] || domain} | Model: ${model} | Max Iterations: ${maxIter}
-
----
-
-## ROLE
-You are the PROJECT-MANAGER agent in Cursor IDE.
-- Do NOT implement, write, or commit any code.
-- Your sole function: delegate to \`${mainAgent}\`, govern QA, compute PEA.
-
----
-
-## STEP 1 — Delegate to \`${mainAgent}\`
-
-Instruct \`${mainAgent}\` to implement the following requirements:
-
-${reqList}
-
-### Constraints for \`${mainAgent}\`:
-- Use existing Cursor IDE skills, MCP servers, and installed plugins FIRST.
-- Source any gaps from public GitHub repos. Pin versions. Document every new dependency.
-- Zero new files when extending an existing file achieves the same result.
-- Quality bar: output must be aesthetically and functionally consistent with the existing codebase.
-
-### Prohibited (absolute, no exceptions):
-\`@ts-ignore\` | \`eslint-disable\` | \`any\`-cast | placeholders | \`Math.random\` as live data |
-self-approval | dead code | TODOs without immediate resolution
-
----
-
-## STEP 2 — \`${mainAgent}\` must self-verify before returning
-
-All of the following must be PASS before signalling completion:
-
-| # | Check | Command / Method |
-|---|---|---|
-| C1 | Build compiles cleanly | \`npm run build\` exits 0 |
-| C2 | All tests pass | \`npx playwright test\` (or \`npm test\`) all green |
-| C3 | TypeScript strict | Zero \`any\`, zero suppression directives |
-| C4 | No runtime errors | Browser console clean during feature execution |
-| C5 | No regression | Visual/functional diff against baseline — no existing features broken |
-| C6 | Bundle within budget | Size delta < 50 KB gzipped |
-
----
-
-## STEP 3 — You (PROJECT-MANAGER) verify logs + compute PEA
-
-After each cycle:
-
-1. Read \`${mainAgent}\` terminal output and logs.
-2. Map each log entry to criteria C1–C6 above.
-3. Compute: **PEA = (passed_checks / 6) × 100**
-4. If PEA < 100%: write a re-delegation prompt that specifies:
-   - The exact failing criterion (C1–C6)
-   - File path + line number of the issue
-   - Expected output vs. actual output observed
-   - Required corrective action
-5. Re-delegate immediately. Repeat from Step 1.
-6. If ${maxIter} iterations pass without PEA = 100%: escalate to user with full cycle log.
-
-**Example re-delegation prompt (few-shot):**
-> "Criterion C4 FAILED: runtime error at \`src/vfx.ts:142\` — null reference in scroll listener.
-> Add a null-guard before the event fires. Re-run \`npx playwright test\`. Return logs showing C4 PASS."
-${collisionSection}
-
----
-
-## OUTPUT FORMAT (mandatory, one row per cycle)
-
-| Cycle | PEA% | Criteria Passed | Criteria Failed | Re-delegation Issued |
-|-------|------|-----------------|-----------------|---------------------|
-| 1     | ?%   | C?, C?          | C?, C?          | Yes/No               |
-
-Continue logging until PEA = 100% or ${maxIter} iterations reached.`;
-}
-
-// ─── FLAWS DIFF TABLE ─────────────────────────────────────────
+// ─── FLAWS / IMPROVEMENTS TABLE ───────────────────────────────
 function buildDiffTable(parsed) {
-  const { warnings } = parsed;
   const container = document.getElementById('diffTable');
   const typeMap = { typo: 'tag-pass', gap: 'tag-part', missing: 'tag-part', structural: 'tag-part' };
   const labelMap = { typo: 'FIXED', gap: 'RESOLVED', missing: 'ADDED', structural: 'RESTRUCTURED' };
 
-  let html = `<thead>
-    <tr>
-      <th>#</th>
-      <th>Raw Prompt Issue</th>
-      <th>Pattern 1 (XML)</th>
-      <th>Pattern 2 (CoT)</th>
-      <th>Type</th>
-    </tr>
-  </thead><tbody>`;
-
-  const defaultFlaws = [
-    { issue: 'Ambiguous role boundary — who codes vs. who governs?', fix1: 'Explicit <system> tag scopes PM vs. worker', fix2: 'ROLE section isolates PM responsibilities', type: 'gap' },
-    { issue: 'No measurable success criteria', fix1: '6 verifiable C1–C6 pass/fail gates', fix2: 'Success criteria table with commands', type: 'missing' },
-    { issue: 'No PEA calculation formula', fix1: 'PEA = (criteria_passed / 6) × 100 in task', fix2: 'Explicit formula in STEP 3', type: 'missing' },
-    { issue: 'Collision guard vague (just "don\'t collide")', fix1: 'git status + stash check + atomic commit prefix', fix2: 'bash snippet + file-lock protocol', type: 'gap' },
-    { issue: 'No cycle-log output format required', fix1: 'Mandatory | Cycle | PEA% | ... | table', fix2: 'Mandatory OUTPUT FORMAT section', type: 'missing' },
-    { issue: 'No max-iteration ceiling (infinite loop risk)', fix1: `Max ${document.getElementById('maxIter')?.value || 5} iteration cap with escalation`, fix2: 'Iteration cap + user escalation trigger', type: 'missing' }
+  const universal = [
+    { issue: 'Raw prompt is unstructured for an autonomous coding agent', fix: 'Rewritten into the 5-layer spec: foundation → requirements → SDLC → quality → deliverables', type: 'structural' },
+    { issue: 'No enforced development lifecycle', fix: 'Non-skippable SDLC FSM: plan → build → test → debug → code-review → re-test → regression → commit → deploy → verify', type: 'missing' },
+    { issue: 'Output format for the executing agent undefined', fix: 'Mandatory lifecycle + requirement-coverage tables and the ###STOP### completion token', type: 'missing' }
   ];
-
-  const flaws = warnings.length > 0 ? warnings.map(w => ({ issue: w.issue, fix1: w.fix, fix2: w.fix, type: w.type })) : [];
-  const allFlaws = [...flaws, ...defaultFlaws.filter(d => !flaws.some(f => f.issue.slice(0,20) === d.issue.slice(0,20)))];
-
-  allFlaws.slice(0, 8).forEach((f, i) => {
-    html += `<tr>
-      <td class="dim">${i+1}</td>
-      <td class="dim">${f.issue}</td>
-      <td class="gold">${f.fix1 || f.fix}</td>
-      <td class="gold">${f.fix2 || f.fix}</td>
-      <td><span class="${typeMap[f.type] || 'tag-part'}">${labelMap[f.type] || 'RESOLVED'}</span></td>
-    </tr>`;
+  const detected = (parsed.gaps || []).map(g => ({ issue: g.issue, fix: g.fix, type: g.type }));
+  const seen = {};
+  const all = detected.concat(universal).filter(f => {
+    const k = String(f.issue).slice(0, 28).toLowerCase();
+    if (seen[k]) return false; seen[k] = 1; return true;
   });
 
+  let html = '<thead><tr><th>#</th><th>Raw Prompt Issue</th><th>How the reconstruction resolves it</th><th>Type</th></tr></thead><tbody>';
+  all.slice(0, 8).forEach((f, i) => {
+    html += '<tr><td class="dim">' + (i + 1) + '</td><td class="dim">' + PRE.esc(f.issue) +
+            '</td><td class="gold">' + PRE.esc(f.fix) + '</td><td><span class="' +
+            (typeMap[f.type] || 'tag-part') + '">' + (labelMap[f.type] || 'RESOLVED') + '</span></td></tr>';
+  });
   html += '</tbody>';
   container.innerHTML = html;
 }
 
-// ─── CRITERIA CHIPS ───────────────────────────────────────────
-function makeCriteriaChips(pct) {
-  const criteria = [
-    { label: 'Req. Coverage', pct },
-    { label: 'Constraint Guard', pct: pct >= 95 ? 100 : 94 },
-    { label: 'Success Criteria', pct: pct >= 95 ? 100 : 96 },
-    { label: 'Instruction Clarity', pct: 95 },
-    { label: 'Idempotency', pct: pct >= 95 ? 90 : 88 }
-  ];
-  return criteria.map(c => {
-    const cls = c.pct >= 95 ? 'pass' : c.pct >= 80 ? 'partial' : 'fail';
-    const icon = c.pct >= 95 ? '✓' : c.pct >= 80 ? '~' : '✗';
-    return `<div class="criterion-chip ${cls}">${icon} ${c.label} ${c.pct}%</div>`;
+// ─── RECONSTRUCTION UI (deterministic + live-AI) ──────────────
+// Backend base URL for Live AI mode. Set after the VPS backend is deployed;
+// empty string keeps the engine fully working in deterministic-only mode.
+window.RECON_API_BASE = window.RECON_API_BASE || (function () {
+  var m = document.querySelector('meta[name="recon-api-base"]');
+  return ((m && m.content) || '').trim();
+})();
+
+function criteriaChips(score) {
+  return score.dims.map(function (d) {
+    const cls = d.pct >= 95 ? 'pass' : d.pct >= 80 ? 'partial' : 'fail';
+    const icon = d.pct >= 95 ? '✓' : d.pct >= 80 ? '~' : '✗';
+    return '<div class="criterion-chip ' + cls + '">' + icon + ' ' + d.label + ' ' + d.pct + '%</div>';
   }).join('');
+}
+
+async function reconstructViaAI(raw, model) {
+  const base = (window.RECON_API_BASE || '').replace(/\/+$/, '');
+  if (!base) throw new Error('AI backend not configured');
+  const ctrl = new AbortController();
+  const timer = setTimeout(function () { ctrl.abort(); }, 60000);
+  try {
+    const res = await fetch(base + '/reconstruct', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ raw: raw, target: model }),
+      signal: ctrl.signal
+    });
+    if (!res.ok) throw new Error('backend HTTP ' + res.status);
+    const data = await res.json();
+    if (!data || !data.ok || !data.prompt) throw new Error('bad backend response');
+    return { prompt: data.prompt, model: data.model || 'openrouter' };
+  } finally { clearTimeout(timer); }
+}
+
+function renderResult(result, sourceLabel) {
+  const v0 = result.variants[0], v1 = result.variants[1];
+
+  // Accuracy bars (values out of 20 for the existing renderer).
+  const dims = v0.score.dims.map(function (d) { return d.label; });
+  const p1 = v0.score.dims.map(function (d) { return Math.round(d.pct / 5); });
+  const p2 = v1.score.dims.map(function (d) { return Math.round(d.pct / 5); });
+  buildAccBars(p1, p2, dims);
+
+  // Update the top meter rings to the real computed overall scores.
+  const CIRC = 207.3;
+  [['ring1', v0.score.overall], ['ring2', v1.score.overall]].forEach(function (pair) {
+    const el = document.getElementById(pair[0]);
+    if (el) el.style.strokeDashoffset = CIRC - (pair[1] / 100) * CIRC;
+    const pe = document.getElementById(pair[0].replace('ring', 'pct'));
+    if (pe) pe.textContent = pair[1] + '%';
+  });
+
+  const container = document.getElementById('reconCards');
+  container.innerHTML = '';
+  const cards = [
+    { rank: 'Primary · Target-optimised', title: v0.label, sub: sourceLabel, score: v0.score, prompt: v0.prompt, icon: 'award' },
+    { rank: 'Portable · Model-agnostic', title: v1.label, sub: 'Runs on any compliant coding agent', score: v1.score, prompt: v1.prompt, icon: 'layers' }
+  ];
+  cards.forEach(function (card, idx) {
+    const div = document.createElement('div');
+    div.className = 'recon-card';
+    div.innerHTML =
+      '<div class="recon-card-header">' +
+        '<div class="recon-card-meta">' +
+          '<div class="recon-card-rank"><i data-lucide="' + card.icon + '" style="width:12px;height:12px;"></i>' + card.rank + '</div>' +
+          '<div class="recon-card-title">' + card.title + '</div>' +
+          '<div class="recon-card-sub">' + card.sub + '</div>' +
+        '</div>' +
+        '<div class="accuracy-pill"><span class="pct">' + card.score.overall + '%</span><span class="pct-label">Coverage</span></div>' +
+      '</div>' +
+      '<div class="criteria-grid">' + criteriaChips(card.score) + '</div>' +
+      '<div class="prompt-output-wrap">' +
+        '<div class="prompt-output-label"><span>Reconstructed Prompt Output</span>' +
+          '<button class="copy-btn" onclick="copyPrompt(this, \'out' + idx + '\')"><i data-lucide="copy" style="width:12px;height:12px;"></i> Copy</button>' +
+        '</div>' +
+        '<pre class="prompt-output" id="out' + idx + '">' + PRE.esc(card.prompt) + '</pre>' +
+      '</div>';
+    container.appendChild(div);
+  });
+
+  buildDiffTable(result.parsed);
+  lucide.createIcons();
+  const outputSection = document.getElementById('outputSection');
+  outputSection.classList.add('visible');
+  setTimeout(function () { outputSection.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 100);
 }
 
 // ─── MAIN RECONSTRUCTION ──────────────────────────────────────
@@ -1501,8 +1320,11 @@ function runReconstruction() {
   if (!raw) { showToast('Paste a raw prompt first', false); return; }
 
   const model = document.getElementById('modelTarget').value;
-  const domain = document.getElementById('domainCtx').value;
-  const maxIter = document.getElementById('maxIter').value || 5;
+  const maxLoops = parseInt(document.getElementById('maxIter').value, 10) || 3;
+  const domSel = document.getElementById('domainCtx').value;
+  const domain = (domSel && domSel !== 'auto') ? domSel : undefined;
+  const aiEl = document.getElementById('aiToggle');
+  const aiMode = !!(aiEl && aiEl.checked);
 
   const runBtn = document.getElementById('runBtn');
   const spinner = document.getElementById('spinner');
@@ -1517,98 +1339,44 @@ function runReconstruction() {
   runLabel.textContent = 'Reconstructing...';
   overlay.classList.add('visible');
 
-  const steps = ['Parsing requirements...', 'Detecting constraints...', 'Mapping success criteria...', 'Injecting collision guards...', 'Building XML pattern...', 'Building CoT pattern...', 'Scoring accuracy...'];
+  const steps = aiMode
+    ? ['Contacting reconstruction model...', 'Indexing requirements...', 'Encoding SDLC loop...', 'Adapting to target model...', 'Finalising...']
+    : ['Parsing requirements...', 'Detecting constraints...', 'Mapping success criteria...', 'Injecting SDLC loop...', 'Adapting to target model...', 'Scoring coverage...'];
   let stepIdx = 0;
-  const stepInterval = setInterval(() => {
-    if (stepIdx < steps.length) { stepEl.textContent = steps[stepIdx++]; }
-  }, 280);
+  const stepInterval = setInterval(function () { if (stepIdx < steps.length) stepEl.textContent = steps[stepIdx++]; }, 300);
 
-  setTimeout(() => {
+  const finish = function (result, sourceLabel, toastMsg, good) {
     clearInterval(stepInterval);
     overlay.classList.remove('visible');
     runBtn.disabled = false;
     spinner.style.display = 'none';
     runIcon.style.display = 'block';
     runLabel.textContent = 'Regenerate';
+    renderResult(result, sourceLabel);
+    showToast(toastMsg, good !== false);
+  };
 
-    const parsed = parseRawPrompt(raw);
-    const xmlPrompt = buildXMLPrompt(raw, parsed, model, domain, maxIter);
-    const cotPrompt = buildCoTPrompt(raw, parsed, model, domain, maxIter);
+  // Deterministic baseline is always computed — it is also the AI fallback.
+  const det = PRE.reconstruct(raw, { model: model, maxLoops: maxLoops, domain: domain });
 
-    // Accuracy bars
-    const dims = ['Req. Coverage', 'Constraint Adherence', 'Success Criteria', 'Instruction Clarity', 'Idempotency'];
-    const p1 = [20, 19, 20, 19, 19];
-    const p2 = [19, 17, 19, 19, 19];
-    buildAccBars(p1, p2, dims);
-
-    // Build reconstruction cards
-    const container = document.getElementById('reconCards');
-    container.innerHTML = '';
-
-    const cards = [
-      {
-        rank: 'Pattern 1 · Top Accuracy',
-        title: 'XML Role-Scoped Prompt',
-        sub: 'Anthropic/Claude Pattern — Explicit tag-delimited agent scoping',
-        pct: 97,
-        prompt: xmlPrompt,
-        why: 'Loses 3% — no explicit max-cycle timeout ceiling. All 6 requirements mapped.',
-        reqCount: parsed.requirements.length || 6
-      },
-      {
-        rank: 'Pattern 2 · Chain-of-Thought',
-        title: 'CoT Structured Prompt',
-        sub: 'OpenAI/GPT Pattern — Step-indexed delegation with few-shot re-delegation',
-        pct: 93,
-        prompt: cotPrompt,
-        why: 'Loses 7% — tabular cycle-log defined but PEA escalation path less explicit than Pattern 1.',
-        reqCount: parsed.requirements.length || 6
-      }
-    ];
-
-    cards.forEach((card, idx) => {
-      const div = document.createElement('div');
-      div.className = 'recon-card';
-      div.innerHTML = `
-        <div class="recon-card-header">
-          <div class="recon-card-meta">
-            <div class="recon-card-rank"><i data-lucide="${idx === 0 ? 'award' : 'layers'}" style="width:12px;height:12px;"></i>${card.rank}</div>
-            <div class="recon-card-title">${card.title}</div>
-            <div class="recon-card-sub">${card.sub}</div>
-          </div>
-          <div class="accuracy-pill">
-            <span class="pct">${card.pct}%</span>
-            <span class="pct-label">PEA</span>
-          </div>
-        </div>
-        <div class="criteria-grid">${makeCriteriaChips(card.pct)}</div>
-        <div class="prompt-output-wrap">
-          <div class="prompt-output-label">
-            <span>Reconstructed Prompt Output</span>
-            <button class="copy-btn" onclick="copyPrompt(this, 'out${idx}')">
-              <i data-lucide="copy" style="width:12px;height:12px;"></i> Copy
-            </button>
-          </div>
-          <pre class="prompt-output" id="out${idx}">${card.prompt.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</pre>
-        </div>
-        <div style="padding:0.6rem 1.5rem 1rem;">
-          <div style="font-size:0.73rem;color:var(--text-faint);line-height:1.5;">
-            <i data-lucide="alert-circle" style="width:12px;height:12px;color:var(--text-faint);vertical-align:middle;margin-right:4px;"></i>
-            ${card.why}
-          </div>
-        </div>
-      `;
-      container.appendChild(div);
+  if (aiMode) {
+    reconstructViaAI(raw, model).then(function (ai) {
+      const parsed = PRE.parseRawPrompt(raw);
+      det.variants[0] = {
+        key: 'primary',
+        label: (PRE.MODELS[model] || PRE.MODELS.generic).label + ' · AI (' + ai.model + ')',
+        prompt: ai.prompt,
+        score: PRE.scoreReconstruction(parsed, ai.prompt)
+      };
+      finish(det, 'Live AI · ' + ai.model, 'Reconstructed live via ' + ai.model);
+    }).catch(function () {
+      finish(det, 'Built-in engine (AI unavailable)', 'AI backend unavailable — used the built-in engine', false);
     });
-
-    buildDiffTable(parsed);
-    lucide.createIcons();
-
-    const outputSection = document.getElementById('outputSection');
-    outputSection.classList.add('visible');
-    setTimeout(() => outputSection.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
-    showToast('Reconstructed with 97% & 93% accuracy');
-  }, 2100);
+  } else {
+    setTimeout(function () {
+      finish(det, 'Deterministic built-in engine', 'Reconstructed · ' + det.variants[0].score.overall + '% coverage');
+    }, 1400);
+  }
 }
 
 // ─── COPY ──────────────────────────────────────────────────────

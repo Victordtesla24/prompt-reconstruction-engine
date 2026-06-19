@@ -1,0 +1,17 @@
+[Unit]
+Description=Prompt Reconstruction Engine — OpenRouter backend
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/root/prompt-reconstruction-engine/server
+EnvironmentFile=/root/prompt-reconstruction-engine/server/.env
+ExecStart=/usr/bin/env node /root/prompt-reconstruction-engine/server/reconstruct-server.cjs
+Restart=always
+RestartSec=3
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
