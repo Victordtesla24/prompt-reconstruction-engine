@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Prompt Reconstruction Engine — Max Execution Accuracy</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 36 36'%3E%3Crect width='36' height='36' fill='%230A0A0A'/%3E%3Cpolygon points='18,4 32,28 4,28' fill='none' stroke='%23C9A84C' stroke-width='2'/%3E%3Ccircle cx='18' cy='19' r='3' fill='%23C9A84C'/%3E%3C/svg%3E">
 
 <!-- Fonts: Playfair Display + DM Sans (Vikram's stack) -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1079,13 +1080,14 @@ Example: Implement new animations for the cinematic-uiux-vfx-engineer agent. Tes
     <div class="api-warning">
       <i data-lucide="sparkles" style="width:14px;height:14px;color:#C9A84C;flex-shrink:0;margin-top:1px;"></i>
       <span>
-        <label style="display:inline-flex;align-items:center;gap:8px;cursor:pointer;">
+        <label id="aiToggleLabel" style="display:inline-flex;align-items:center;gap:8px;cursor:pointer;">
           <input type="checkbox" id="aiToggle" style="accent-color:var(--gold);width:14px;height:14px;cursor:pointer;">
           <strong style="color:var(--gold);">Live AI reconstruction</strong>
         </label>
         — when enabled, a current open-source model on OpenRouter
         (<code style="color:var(--gold);background:rgba(201,168,76,0.1);padding:0 4px;border-radius:3px;">z-ai/glm-5.2</code> → <code style="color:var(--gold);background:rgba(201,168,76,0.1);padding:0 4px;border-radius:3px;">deepseek/deepseek-v4-pro</code>)
         performs the reconstruction through the secure backend. Off by default; the deterministic built-in engine runs instantly and is always the fallback.
+        <span id="aiAvailNote" style="display:block;margin-top:6px;font-size:0.74rem;color:var(--text-faint);"></span>
       </span>
     </div>
 
@@ -1338,6 +1340,43 @@ window.RECON_API_BASE = window.RECON_API_BASE || (function () {
   return ((m && m.content) || '').trim();
 })();
 
+// ─── LIVE-AI BACKEND AVAILABILITY ─────────────────────────────
+// Probe the optional backend on load so the Live-AI toggle reflects reality:
+// reachable ⇒ enabled; absent/unreachable ⇒ cleanly disabled with a clear note
+// (no scary "unavailable" error). The deterministic engine is always functional,
+// so the page is never in a broken state.
+window.__liveAiAvailable = false;
+function setLiveAiAvailable(available, note) {
+  window.__liveAiAvailable = !!available;
+  var el = document.getElementById('aiToggle');
+  var label = document.getElementById('aiToggleLabel');
+  var noteEl = document.getElementById('aiAvailNote');
+  if (el) { el.disabled = !available; if (!available) el.checked = false; }
+  if (label) {
+    label.style.opacity = available ? '1' : '0.55';
+    label.style.cursor = available ? 'pointer' : 'not-allowed';
+    label.title = available ? '' : 'Live AI requires the optional self-hosted backend';
+  }
+  if (noteEl) noteEl.textContent = note || '';
+}
+function probeBackend() {
+  var base = (window.RECON_API_BASE || '').replace(/\/+$/, '');
+  if (!base) {
+    setLiveAiAvailable(false, 'Live AI backend not configured — running the instant deterministic engine (fully functional). To enable Live AI, deploy the backend and set the recon-api-base meta.');
+    return;
+  }
+  var ctrl = new AbortController();
+  var timer = setTimeout(function () { ctrl.abort(); }, 6000);
+  fetch(base + '/health', { method: 'GET', signal: ctrl.signal })
+    .then(function (r) { return r.ok ? r.json() : null; })
+    .then(function (d) {
+      if (d && d.ok) setLiveAiAvailable(true, 'Live AI backend connected · ' + ((d.reconstructors && d.reconstructors[0]) || 'OpenRouter') + ' + deterministic fallback.');
+      else setLiveAiAvailable(false, 'Live AI backend unreachable — using the deterministic engine.');
+    })
+    .catch(function () { setLiveAiAvailable(false, 'Live AI backend unreachable — using the deterministic engine.'); })
+    .then(function () { clearTimeout(timer); });
+}
+
 function criteriaChips(score) {
   return score.dims.map(function (d) {
     const cls = d.pct >= 95 ? 'pass' : d.pct >= 80 ? 'partial' : 'fail';
@@ -1565,7 +1604,7 @@ function runReconstruction() {
   const domSel = document.getElementById('domainCtx').value;
   const domain = (domSel && domSel !== 'auto') ? domSel : undefined;
   const aiEl = document.getElementById('aiToggle');
-  const aiMode = !!(aiEl && aiEl.checked);
+  const aiMode = !!(aiEl && aiEl.checked && window.__liveAiAvailable);
 
   const runBtn = document.getElementById('runBtn');
   const spinner = document.getElementById('spinner');
@@ -1614,7 +1653,7 @@ function runReconstruction() {
       };
       finish(det, 'Live AI · ' + ai.model, 'Reconstructed live via ' + ai.model);
     }).catch(function () {
-      finish(det, 'Built-in engine (AI unavailable)', 'AI backend unavailable — used the built-in engine', false);
+      finish(det, 'Deterministic built-in engine (AI fallback)', 'Used the instant built-in engine', true);
     });
   } else {
     setTimeout(function () {
@@ -1680,6 +1719,7 @@ window.addEventListener('DOMContentLoaded', () => {
   lucide.createIcons();
   animateRings();
   renderAttachments();
+  probeBackend();
 });
 </script>
 </body>
