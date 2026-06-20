@@ -47,14 +47,22 @@
    * the owner requested: broad latest open-source + the two named flagships. */
   var MODELS = {
     'claude-opus-4-8': {
-      label: 'Claude Opus 4.8 (1M · high effort)', executor: 'anthropic/claude-opus-4.8',
+      label: 'Claude Opus 4.8 (1M · xHigh · Ultracode)', executor: 'anthropic/claude-opus-4.8',
       family: 'claude', reasoning: 'effort',
-      note: 'Wrap sections in XML tags; run at high/"max" effort; plan-then-act; Markdown tables for coverage.'
+      preamble: 'Operate at xHIGH reasoning effort with Ultracode multi-agent orchestration: decompose the task, fan out independent subagents to investigate and implement in parallel, and adversarially verify every finding before acting on it. As the SWE-bench-leading agentic coder, plan exhaustively before editing, wrap each section in XML tags, and prefer verified correctness over brevity.',
+      note: 'SWE-bench-leading agentic coder. Wrap sections in XML tags; run at xHigh effort with Ultracode multi-agent orchestration (parallel subagents + adversarial verification); plan-then-act; Markdown tables for coverage.'
+    },
+    'claude-sonnet-4-7': {
+      label: 'Claude Sonnet 4.7 (all thinking levels)', executor: 'anthropic/claude-sonnet-4.7',
+      family: 'claude', reasoning: 'effort',
+      preamble: 'Choose a thinking budget proportional to task difficulty — minimal for trivial edits, extended/high for multi-file features — and state which level you chose. You are a fast, strong agentic coder with an excellent quality-to-latency ratio: plan, then act in tight verify loops, wrap each section in XML tags, and keep a visible plan plus the requirement-coverage table.',
+      note: 'Fast, high-throughput agentic coder; configurable thinking budget across ALL levels (minimal→extended). Wrap sections in XML; scale thinking to task difficulty; keep plan + coverage tables visible.'
     },
     'deepseek-v4-pro': {
-      label: 'DeepSeek V4 Pro (1M · <think>)', executor: 'deepseek/deepseek-v4-pro',
+      label: 'DeepSeek V4 Pro (1M · xHigh thinking)', executor: 'deepseek/deepseek-v4-pro',
       family: 'deepseek', reasoning: 'think',
-      note: 'Set thinking_mode + reasoning_effort="max"; phase-tracking inside <think>…</think>; DSML tool calls.'
+      preamble: 'Run in thinking mode with reasoning_effort="xhigh". Do ALL planning, edge-case analysis and phase-tracking inside <think>…</think>; keep code and the required tables in the visible answer. You are strongest on algorithmic and competitive-grade coding — reason rigorously about complexity, invariants and corner cases before emitting code.',
+      note: 'Algorithmic / competitive-coding strength. Set thinking_mode + reasoning_effort="xhigh"; phase-tracking inside <think>…</think>; DSML tool calls; rigorous edge-case reasoning.'
     },
     'glm-5-2': {
       label: 'GLM-5.2 (hybrid · strict · latest)', executor: 'z-ai/glm-5.2',
@@ -369,6 +377,7 @@
 
   // ── model-specific reasoning preamble ─────────────────────────────────────
   function reasoningPreamble(model) {
+    if (model.preamble) return model.preamble;   // per-model benchmark-tailored override
     switch (model.reasoning) {
       case 'effort': return 'Operate at HIGH ("max") reasoning effort. Plan thoroughly before acting; review exhaustively. Prefer correctness over brevity.';
       case 'think':  return 'Run in thinking mode with reasoning_effort="max". Do ALL planning and phase-tracking inside <think>…</think>; keep code and the required tables in the visible answer.';

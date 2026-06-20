@@ -46,8 +46,10 @@ test('prose input still yields requirements + constraints (fallback)', () => {
 });
 
 test('reconstructed prompt contains ALL mandated SDLC phases, in order', () => {
-  const r = PRE.reconstruct(RAW_LIST, { model: 'claude-opus-4-8' });
-  const prompt = r.variants[0].prompt;
+  const full = PRE.reconstruct(RAW_LIST, { model: 'claude-opus-4-8' }).variants[0].prompt;
+  // Scope to the SDLC section so requirement/preamble text that happens to
+  // contain a phase word (e.g. "Build a rate limiter") can't confuse ordering.
+  const prompt = full.slice(full.indexOf('EXECUTION CONTROL'));
   let last = -1;
   for (const ph of PRE.SDLC_PHASES) {
     const idx = prompt.indexOf(ph.name);
@@ -87,11 +89,27 @@ test('per-model: Claude target uses XML tags', () => {
   assert.ok(/high|max.*effort|effort/i.test(prompt));
 });
 
-test('per-model: DeepSeek target invokes <think> + reasoning_effort=max', () => {
+test('per-model: DeepSeek target invokes <think> + reasoning_effort=xhigh', () => {
   const prompt = PRE.reconstruct(RAW_LIST, { model: 'deepseek-v4-pro' }).variants[0].prompt;
   assert.ok(/<think>/.test(prompt));
-  assert.ok(/reasoning_effort="max"/.test(prompt));
+  assert.ok(/reasoning_effort="xhigh"/.test(prompt));
   assert.ok(!/<foundation>/.test(prompt), 'DeepSeek variant must not use Claude XML wrappers');
+});
+
+test('per-model: Opus 4.8 target runs xHigh + Ultracode multi-agent orchestration', () => {
+  const prompt = PRE.reconstruct(RAW_LIST, { model: 'claude-opus-4-8' }).variants[0].prompt;
+  assert.ok(/<foundation>/.test(prompt), 'Opus (claude family) uses XML wrappers');
+  assert.ok(/xhigh/i.test(prompt), 'Opus runs at xHigh reasoning effort');
+  assert.ok(/ultracode/i.test(prompt), 'Opus uses Ultracode multi-agent orchestration');
+});
+
+test('per-model: Claude Sonnet 4.7 target uses XML + scalable thinking budget (all levels)', () => {
+  const r = PRE.reconstruct(RAW_LIST, { model: 'claude-sonnet-4-7' });
+  const prompt = r.variants[0].prompt;
+  assert.ok(/<foundation>/.test(prompt) && /<sdlc>/.test(prompt), 'Sonnet (claude family) uses XML wrappers');
+  assert.ok(/thinking budget/i.test(prompt), 'must instruct a thinking budget scaled across all levels');
+  assert.equal(PRE.MODELS['claude-sonnet-4-7'].executor, 'anthropic/claude-sonnet-4.7');
+  assert.equal(PRE.MODELS['claude-sonnet-4-7'].family, 'claude');
 });
 
 test('per-model: Qwen target forbids hidden CoT (visible output)', () => {
