@@ -905,6 +905,17 @@ body {
   .acc-bar-row { grid-template-columns: 100px 1fr 40px; }
   .attach-inline { flex-basis: 100%; }
 }
+
+/* ─── REDUCED MOTION (WCAG 2.3.3 — vestibular safety) ─────────── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+  html { scroll-behavior: auto !important; }
+  #bg-canvas { opacity: 0.25; }   /* keep the motif, drop the motion (loop is gated in JS too) */
+}
 </style>
 </head>
 <body>
@@ -1237,8 +1248,10 @@ Example: Implement new animations for the cinematic-uiux-vfx-engineer agent. Tes
   });
 
   let frame = 0;
+  // Respect prefers-reduced-motion: render one static frame, skip the rAF loop.
+  const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   function animate() {
-    requestAnimationFrame(animate);
+    if (!reduceMotion) requestAnimationFrame(animate);
     frame++;
     const t = frame * 0.003;
 
