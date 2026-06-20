@@ -372,3 +372,24 @@ test('validateReconstruction: backward compatible — deterministic output passe
   assert.equal(PRE.validateReconstruction(prompt).ok, true);
   assert.equal(PRE.validateReconstruction(prompt, { requirements: 2 }).ok, true);
 });
+
+// ── R13/R14: independent verification + tooling discovery in the reconstructed prompt ──
+
+test('R14: reconstructed prompt drives tooling/skills/MCP discovery + reuse over reinvention', () => {
+  const prompt = PRE.reconstruct(RAW_LIST, { model: 'generic' }).variants[0].prompt;
+  assert.ok(/discover and use|tooling discovery/i.test(prompt), 'must drive tool discovery');
+  assert.ok(/\bMCP\b/.test(prompt) && /skills/i.test(prompt) && /(open-source|libraries)/i.test(prompt), 'must name skills/plugins/MCP/OSS libraries');
+  assert.ok(/reinvent|extending proven|existing/i.test(prompt), 'must prefer reuse over reinvention');
+});
+
+test('R13: reconstructed prompt mandates an INDEPENDENT verification pass (evidence-before-claims)', () => {
+  const prompt = PRE.reconstruct(RAW_LIST, { model: 'generic' }).variants[0].prompt;
+  assert.ok(/independent verification|independent-reviewer/i.test(prompt), 'must mandate independent verification');
+  assert.ok(/evidence|execution|test output|logs|live check/i.test(prompt), 'must require evidence, not self-report');
+});
+
+test('meta-instruction also mandates independent verification + tooling discovery (live-AI path)', () => {
+  const mi = PRE.buildMetaInstruction('claude-opus-4-8');
+  assert.ok(/independent/i.test(mi) && /verif/i.test(mi), 'meta must require independent verification');
+  assert.ok(/\bMCP\b|tooling|skills/i.test(mi), 'meta must require tooling discovery');
+});
