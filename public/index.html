@@ -31,11 +31,11 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 
-<!-- Three.js -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+<!-- Three.js (deferred — non-render-blocking; used by initThree() on DOMContentLoaded) -->
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
 
-<!-- Lucide -->
-<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+<!-- Lucide (deferred — non-render-blocking) -->
+<script defer src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
 
 <!-- Live-AI backend: set content to your VPS reconstruct URL (e.g. https://<host>.<tailnet>.ts.net)
      to enable OpenRouter reconstruction. Empty = deterministic-only (fully functional, no backend). -->
@@ -44,7 +44,7 @@
 <!-- Reconstruction core (spec v2) — shared by frontend + VPS backend.
      ?v busts stale browser caches on engine updates; no-cache headers
      (firebase.json) keep index.html + assets fresh after every deploy. -->
-<script src="engine.core.js?v=2.2"></script>
+<script defer src="engine.core.js?v=2.2"></script>
 
 <style>
 /* ─── TOKENS ────────────────────────────────────────────────── */
@@ -1191,7 +1191,8 @@ Example: Implement new animations for the cinematic-uiux-vfx-engineer agent. Tes
 
 <script>
 // ─── THREE.JS BACKGROUND ─────────────────────────────────────
-(function initThree() {
+// Defined here, invoked from DOMContentLoaded so deferred three.js is loaded first.
+function initThree() {
   const canvas = document.getElementById('bg-canvas');
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
@@ -1286,7 +1287,7 @@ Example: Implement new animations for the cinematic-uiux-vfx-engineer agent. Tes
     renderer.render(scene, camera);
   }
   animate();
-})();
+}
 
 // ─── RING ANIMATION ──────────────────────────────────────────
 function animateRings() {
@@ -1782,10 +1783,13 @@ IMPORTANT NOTE:
 
 // ─── INIT ─────────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', () => {
-  lucide.createIcons();
+  // Deferred CDNs (three.js, lucide) have executed by now. Guard each so a slow/
+  // failed CDN can't break the core flow (attachments, backend probe).
+  try { if (window.lucide) lucide.createIcons(); } catch (e) {}
+  try { if (window.THREE) initThree(); } catch (e) {}
   animateRings();
-  renderAttachments();
   probeBackend();
+  renderAttachments();
 });
 </script>
 </body>
