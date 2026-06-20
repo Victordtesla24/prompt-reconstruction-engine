@@ -19,7 +19,7 @@
 
 <!-- Live-AI backend: set content to your VPS reconstruct URL (e.g. https://<host>.<tailnet>.ts.net)
      to enable OpenRouter reconstruction. Empty = deterministic-only (fully functional, no backend). -->
-<meta name="recon-api-base" content="">
+<meta name="recon-api-base" content="https://deputy-supplement-divx-oaks.trycloudflare.com">
 
 <!-- Reconstruction core (spec v2) — shared by frontend + VPS backend -->
 <script src="engine.core.js"></script>
@@ -1359,22 +1359,35 @@ function setLiveAiAvailable(available, note) {
   }
   if (noteEl) noteEl.textContent = note || '';
 }
-function probeBackend() {
-  var base = (window.RECON_API_BASE || '').replace(/\/+$/, '');
-  if (!base) {
-    setLiveAiAvailable(false, 'Live AI backend not configured — running the instant deterministic engine (fully functional). To enable Live AI, deploy the backend and set the recon-api-base meta.');
-    return;
-  }
-  var ctrl = new AbortController();
-  var timer = setTimeout(function () { ctrl.abort(); }, 6000);
-  fetch(base + '/health', { method: 'GET', signal: ctrl.signal })
+// Resolve the live backend base URL: prefer a deploy-time backend.json (lets the
+// URL change — e.g. a tunnelled self-hosted backend — without a code change),
+// then fall back to the recon-api-base meta. Result is cached on RECON_API_BASE
+// so reconstructViaAI() uses the resolved URL.
+function resolveBackendBase() {
+  return fetch('backend.json', { cache: 'no-store' })
     .then(function (r) { return r.ok ? r.json() : null; })
-    .then(function (d) {
-      if (d && d.ok) setLiveAiAvailable(true, 'Live AI backend connected · ' + ((d.reconstructors && d.reconstructors[0]) || 'OpenRouter') + ' + deterministic fallback.');
-      else setLiveAiAvailable(false, 'Live AI backend unreachable — using the deterministic engine.');
-    })
-    .catch(function () { setLiveAiAvailable(false, 'Live AI backend unreachable — using the deterministic engine.'); })
-    .then(function () { clearTimeout(timer); });
+    .then(function (j) { return (j && j.url) ? String(j.url) : (window.RECON_API_BASE || ''); })
+    .catch(function () { return (window.RECON_API_BASE || ''); });
+}
+function probeBackend() {
+  resolveBackendBase().then(function (resolved) {
+    var base = (resolved || '').replace(/\/+$/, '');
+    window.RECON_API_BASE = base;
+    if (!base) {
+      setLiveAiAvailable(false, 'Live AI backend not configured — running the instant deterministic engine (fully functional). To enable Live AI, deploy the backend and set the recon-api-base meta.');
+      return;
+    }
+    var ctrl = new AbortController();
+    var timer = setTimeout(function () { ctrl.abort(); }, 6000);
+    fetch(base + '/health', { method: 'GET', signal: ctrl.signal })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (d) {
+        if (d && d.ok) setLiveAiAvailable(true, 'Live AI backend connected · ' + ((d.reconstructors && d.reconstructors[0]) || 'OpenRouter') + ' + deterministic fallback.');
+        else setLiveAiAvailable(false, 'Live AI backend unreachable — using the deterministic engine.');
+      })
+      .catch(function () { setLiveAiAvailable(false, 'Live AI backend unreachable — using the deterministic engine.'); })
+      .then(function () { clearTimeout(timer); });
+  });
 }
 
 function criteriaChips(score) {
