@@ -1382,7 +1382,7 @@ window.RECON_API_BASE = window.RECON_API_BASE || (function () {
 // (no scary "unavailable" error). The deterministic engine is always functional,
 // so the page is never in a broken state.
 window.__liveAiAvailable = false;
-function setLiveAiAvailable(available, note) {
+function setLiveAiAvailable(available, note, retryable) {
   window.__liveAiAvailable = !!available;
   var el = document.getElementById('aiToggle');
   var label = document.getElementById('aiToggleLabel');
@@ -1393,7 +1393,12 @@ function setLiveAiAvailable(available, note) {
     label.style.cursor = available ? 'pointer' : 'not-allowed';
     label.title = available ? '' : 'Live AI requires the optional self-hosted backend';
   }
-  if (noteEl) noteEl.textContent = note || '';
+  if (noteEl) {
+    noteEl.textContent = note || '';
+    noteEl.style.cursor = retryable ? 'pointer' : 'default';
+    noteEl.style.textDecoration = retryable ? 'underline dotted' : 'none';
+    noteEl.onclick = retryable ? function () { probeBackend(1); } : null;
+  }
 }
 // Resolve the live backend base URL: prefer a deploy-time backend.json (lets the
 // URL change — e.g. a tunnelled self-hosted backend — without a code change),
@@ -1405,7 +1410,8 @@ function resolveBackendBase() {
     .then(function (j) { return (j && j.url) ? String(j.url) : (window.RECON_API_BASE || ''); })
     .catch(function () { return (window.RECON_API_BASE || ''); });
 }
-function probeBackend() {
+function probeBackend(attempt) {
+  attempt = attempt || 1;
   resolveBackendBase().then(function (resolved) {
     var base = (resolved || '').replace(/\/+$/, '');
     window.RECON_API_BASE = base;
@@ -1414,16 +1420,27 @@ function probeBackend() {
       return;
     }
     var ctrl = new AbortController();
-    var timer = setTimeout(function () { ctrl.abort(); }, 6000);
+    var timer = setTimeout(function () { ctrl.abort(); }, 8000);
     fetch(base + '/health', { method: 'GET', signal: ctrl.signal })
       .then(function (r) { return r.ok ? r.json() : null; })
       .then(function (d) {
         if (d && d.ok) setLiveAiAvailable(true, 'Live AI backend connected · ' + ((d.reconstructors && d.reconstructors[0]) || 'OpenRouter') + ' + deterministic fallback.');
-        else setLiveAiAvailable(false, 'Live AI backend unreachable — using the deterministic engine.');
+        else onProbeFail(attempt);
       })
-      .catch(function () { setLiveAiAvailable(false, 'Live AI backend unreachable — using the deterministic engine.'); })
+      .catch(function () { onProbeFail(attempt); })
       .then(function () { clearTimeout(timer); });
   });
+}
+// Self-healing: a transient blip (tunnel cold-start, brief restart) must not
+// strand the toggle for the whole session. Auto-retry twice with backoff, then
+// leave a click-to-retry affordance on the note.
+function onProbeFail(attempt) {
+  if (attempt < 3) {
+    setLiveAiAvailable(false, 'Checking Live AI backend… (retry ' + attempt + ' of 2)');
+    setTimeout(function () { probeBackend(attempt + 1); }, attempt * 5000);
+  } else {
+    setLiveAiAvailable(false, 'Live AI backend unreachable — using the deterministic engine. Click to retry.', true);
+  }
 }
 
 function criteriaChips(score) {
