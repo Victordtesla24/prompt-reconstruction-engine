@@ -21,8 +21,10 @@
      to enable OpenRouter reconstruction. Empty = deterministic-only (fully functional, no backend). -->
 <meta name="recon-api-base" content="https://consideration-tamil-pupils-rangers.trycloudflare.com">
 
-<!-- Reconstruction core (spec v2) — shared by frontend + VPS backend -->
-<script src="engine.core.js"></script>
+<!-- Reconstruction core (spec v2) — shared by frontend + VPS backend.
+     ?v busts stale browser caches on engine updates; no-cache headers
+     (firebase.json) keep index.html + assets fresh after every deploy. -->
+<script src="engine.core.js?v=2.2"></script>
 
 <style>
 /* ─── TOKENS ────────────────────────────────────────────────── */
