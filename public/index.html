@@ -70,6 +70,11 @@
 /* ─── BASE ──────────────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; }
+
+/* Visible, on-brand keyboard focus for every interactive element (WCAG 2.4.7).
+   Inputs/selects keep their :focus border-glow; buttons, links and the toggle —
+   which had no focus indicator — now get a clear gold ring on keyboard focus. */
+:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; border-radius: 3px; }
 body {
   background: var(--black);
   color: var(--text);
