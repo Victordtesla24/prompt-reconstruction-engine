@@ -821,10 +821,86 @@ body {
   color: var(--text-muted);
 }
 
+/* ─── ATTACH CONTEXT ─────────────────────────────────────────── */
+.attach-block {
+  margin-top: 1.25rem;
+  border: 1px dashed rgba(201,168,76,0.28);
+  border-radius: var(--r-lg);
+  padding: 1rem 1.1rem;
+  background: rgba(201,168,76,0.03);
+}
+.attach-head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.85rem;
+}
+.attach-head .attach-title {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.attach-head .attach-title em { color: var(--text-muted); font-style: normal; font-weight: 300; text-transform: none; }
+.attach-hint { font-size: 0.72rem; color: var(--text-muted); line-height: 1.4; flex-basis: 100%; }
+.attach-controls { display: flex; flex-wrap: wrap; gap: 0.6rem; }
+.attach-inline { display: flex; gap: 0.4rem; flex: 1 1 240px; min-width: 0; }
+.attach-inline .config-input { flex: 1 1 auto; min-width: 0; }
+.attach-inline textarea.config-input { resize: vertical; font-family: 'Courier New', monospace; font-size: 0.78rem; }
+.attach-btn, .attach-add {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.76rem;
+  font-weight: 500;
+  color: var(--gold);
+  background: var(--gold-glow);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  padding: 0.5rem 0.85rem;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.2s, transform 0.15s;
+}
+.attach-btn:hover, .attach-add:hover { background: rgba(201,168,76,0.22); transform: translateY(-1px); }
+.attach-list { display: flex; flex-direction: column; gap: 0.5rem; margin-top: 0.9rem; }
+.attach-chip {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  padding: 0.5rem 0.7rem;
+  font-size: 0.76rem;
+}
+.attach-chip .chip-icon { color: var(--gold); flex-shrink: 0; display: flex; }
+.attach-chip .chip-label { color: var(--text); font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.attach-chip .chip-meta { color: var(--text-faint); font-size: 0.7rem; margin-left: auto; white-space: nowrap; }
+.attach-chip select.chip-role {
+  background: var(--surface-3);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  color: var(--text-muted);
+  font-size: 0.7rem;
+  padding: 0.2rem 0.4rem;
+  appearance: none; -webkit-appearance: none;
+}
+.attach-chip .chip-remove {
+  background: none; border: none; color: var(--text-faint);
+  cursor: pointer; padding: 0.15rem; display: flex; flex-shrink: 0;
+  transition: color 0.2s;
+}
+.attach-chip .chip-remove:hover { color: #e07070; }
+.attach-empty { font-size: 0.74rem; color: var(--text-faint); padding: 0.3rem 0; }
+
 /* ─── RESPONSIVE ─────────────────────────────────────────────── */
 @media (max-width: 768px) {
   .recon-cards { grid-template-columns: 1fr; }
   .acc-bar-row { grid-template-columns: 100px 1fr 40px; }
+  .attach-inline { flex-basis: 100%; }
 }
 </style>
 </head>
@@ -937,6 +1013,34 @@ Example: Implement new animations for the cinematic-uiux-vfx-engineer agent. Tes
     <div class="input-meta">
       <span class="char-count" id="charCount">0 characters</span>
       <span>Optimised for Claude Opus 4.8, DeepSeek V4 Pro &amp; the OpenRouter open-source frontier</span>
+    </div>
+
+    <!-- ATTACH CONTEXT (R1–R8) -->
+    <div class="attach-block">
+      <div class="attach-head">
+        <i data-lucide="paperclip" style="width:14px;height:14px;color:#C9A84C;"></i>
+        <span class="attach-title">Attach Context <em>· optional</em></span>
+        <span class="attach-hint">Local files, photos &amp; media, GitHub repositories, website links and terminal command outputs. The engine folds them into the reconstructed prompt as target deliverables, debugging/defect-resolution references and a derived TO-DO list — treated strictly as DATA, never instructions.</span>
+      </div>
+      <div class="attach-controls">
+        <label class="attach-btn">
+          <i data-lucide="file-up" style="width:13px;height:13px;"></i> Files / Photos / Media
+          <input type="file" id="fileInput" multiple style="display:none;" onchange="handleFileInput(event)">
+        </label>
+        <div class="attach-inline">
+          <input class="config-input" id="ghInput" placeholder="github.com/owner/repo" onkeydown="if(event.key==='Enter'){event.preventDefault();addGithub();}">
+          <button type="button" class="attach-add" onclick="addGithub()"><i data-lucide="git-branch" style="width:13px;height:13px;"></i> Add repo</button>
+        </div>
+        <div class="attach-inline">
+          <input class="config-input" id="urlInput" placeholder="https://site.com/page" onkeydown="if(event.key==='Enter'){event.preventDefault();addWebsite();}">
+          <button type="button" class="attach-add" onclick="addWebsite()"><i data-lucide="link" style="width:13px;height:13px;"></i> Add link</button>
+        </div>
+        <div class="attach-inline" style="flex-basis:100%;align-items:flex-start;">
+          <textarea class="config-input" id="termInput" rows="2" placeholder="Paste terminal command output (build logs, stack traces, test failures)…"></textarea>
+          <button type="button" class="attach-add" onclick="addTerminal()"><i data-lucide="terminal-square" style="width:13px;height:13px;"></i> Add output</button>
+        </div>
+      </div>
+      <div class="attach-list" id="attachList"></div>
     </div>
 
     <!-- CONFIG -->
@@ -1242,7 +1346,7 @@ function criteriaChips(score) {
   }).join('');
 }
 
-async function reconstructViaAI(raw, model) {
+async function reconstructViaAI(raw, model, attachments) {
   const base = (window.RECON_API_BASE || '').replace(/\/+$/, '');
   if (!base) throw new Error('AI backend not configured');
   const ctrl = new AbortController();
@@ -1251,7 +1355,7 @@ async function reconstructViaAI(raw, model) {
     const res = await fetch(base + '/reconstruct', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ raw: raw, target: model }),
+      body: JSON.stringify({ raw: raw, target: model, attachments: attachments || [] }),
       signal: ctrl.signal
     });
     if (!res.ok) throw new Error('backend HTTP ' + res.status);
@@ -1314,6 +1418,143 @@ function renderResult(result, sourceLabel) {
   setTimeout(function () { outputSection.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 100);
 }
 
+// ─── CONTEXT ATTACHMENTS (R1–R8) ──────────────────────────────
+// Collect local files / photos / media, GitHub repos, website links and
+// terminal outputs, then pass them (deterministic engine + Live-AI backend)
+// into the reconstruction as DATA. Empty list ⇒ output is unchanged.
+window.__attachments = window.__attachments || [];
+var __attachSeq = 0;
+var ATTACH_ICON = { file: 'file-text', image: 'image', media: 'film', github: 'git-branch', website: 'link', terminal: 'terminal-square' };
+
+function collectAttachments() {
+  return window.__attachments.map(function (a) {
+    return { type: a.type, label: a.label, url: a.url, content: a.content, role: a.role, meta: a.meta };
+  });
+}
+
+function pushAttachment(a) {
+  a.id = 'att' + (++__attachSeq);
+  if (!a.role) a.role = 'reference';
+  window.__attachments.push(a);
+  renderAttachments();
+}
+
+function removeAttachment(id) {
+  window.__attachments = window.__attachments.filter(function (a) { return a.id !== id; });
+  renderAttachments();
+}
+
+function setAttachmentRole(id, role) {
+  var a = window.__attachments.filter(function (x) { return x.id === id; })[0];
+  if (a) a.role = role;
+}
+
+function renderAttachments() {
+  var list = document.getElementById('attachList');
+  if (!list) return;
+  if (!window.__attachments.length) {
+    list.innerHTML = '<div class="attach-empty">No context attached — the engine runs on the raw prompt alone.</div>';
+    return;
+  }
+  list.innerHTML = window.__attachments.map(function (a) {
+    var icon = ATTACH_ICON[a.type] || 'paperclip';
+    var detail = a.url ? a.url : (a.content ? (a.content.length + ' chars') : (a.meta && a.meta.mime ? a.meta.mime : ''));
+    if (a.meta && a.meta.size) detail += (detail ? ' · ' : '') + Math.max(1, Math.round(a.meta.size / 1024)) + ' KB';
+    function sel(r) { return a.role === r ? ' selected' : ''; }
+    return '<div class="attach-chip">' +
+      '<span class="chip-icon"><i data-lucide="' + icon + '" style="width:14px;height:14px;"></i></span>' +
+      '<span class="chip-label">[' + a.type + '] ' + PRE.esc(a.label) + '</span>' +
+      '<span class="chip-meta">' + PRE.esc(detail) + '</span>' +
+      '<select class="chip-role" onchange="setAttachmentRole(\'' + a.id + '\', this.value)" title="How the executing agent should treat this attachment">' +
+        '<option value="reference"' + sel('reference') + '>reference</option>' +
+        '<option value="deliverable"' + sel('deliverable') + '>deliverable</option>' +
+        '<option value="todo"' + sel('todo') + '>to-do</option>' +
+      '</select>' +
+      '<button type="button" class="chip-remove" onclick="removeAttachment(\'' + a.id + '\')" title="Remove" aria-label="Remove attachment"><i data-lucide="x" style="width:14px;height:14px;"></i></button>' +
+    '</div>';
+  }).join('');
+  lucide.createIcons();
+}
+
+function handleFileInput(ev) {
+  var files = ev.target.files;
+  if (!files || !files.length) return;
+  Array.prototype.forEach.call(files, function (file) {
+    var isImage = /^image\//.test(file.type);
+    var isMedia = /^(video|audio)\//.test(file.type);
+    var type = isImage ? 'image' : isMedia ? 'media' : 'file';
+    var meta = { mime: file.type || 'application/octet-stream', size: file.size };
+    // Text-like files under 256 KB are read inline so the agent can use their
+    // content; images/media/large files are referenced by name + type + size.
+    if (type === 'file' && file.size <= 256 * 1024) {
+      var reader = new FileReader();
+      reader.onload = function () { pushAttachment({ type: type, label: file.name, content: String(reader.result || ''), meta: meta, role: 'reference' }); };
+      reader.onerror = function () { pushAttachment({ type: type, label: file.name, meta: meta, role: 'reference' }); };
+      reader.readAsText(file);
+    } else {
+      pushAttachment({ type: type, label: file.name, meta: meta, role: 'reference' });
+    }
+  });
+  ev.target.value = '';
+}
+
+function addWebsite() {
+  var el = document.getElementById('urlInput');
+  var v = (el.value || '').trim();
+  if (!v) return;
+  if (!/^https?:\/\//i.test(v)) v = 'https://' + v;
+  pushAttachment({ type: 'website', label: v.replace(/^https?:\/\//, '').slice(0, 60), url: v, role: 'reference' });
+  el.value = '';
+  showToast('Website link attached');
+}
+
+function addTerminal() {
+  var el = document.getElementById('termInput');
+  var v = (el.value || '').trim();
+  if (!v) return;
+  pushAttachment({ type: 'terminal', label: 'terminal output', content: v, role: 'reference' });
+  el.value = '';
+  showToast('Terminal output attached');
+}
+
+function addGithub() {
+  var el = document.getElementById('ghInput');
+  var raw = (el.value || '').trim();
+  if (!raw) return;
+  var m = raw.match(/github\.com\/([^\/\s]+)\/([^\/\s#?]+)/i) || raw.match(/^([\w.-]+)\/([\w.-]+)$/);
+  if (!m) { showToast('Enter a github.com/owner/repo URL', false); return; }
+  var owner = m[1], repo = m[2].replace(/\.git$/, '');
+  var slug = owner + '/' + repo;
+  el.value = '';
+  pushAttachment({ type: 'github', label: slug, url: 'https://github.com/' + slug, role: 'reference', content: '' });
+  enrichGithub(window.__attachments[window.__attachments.length - 1], owner, repo);
+  showToast('GitHub repo attached — fetching metadata…');
+}
+
+// Enrich a GitHub attachment with REAL public metadata + README (key-free,
+// CORS-enabled). On failure (offline / rate-limited / private) the URL-only
+// attachment is kept — never fabricated.
+function enrichGithub(att, owner, repo) {
+  if (!att) return;
+  var api = 'https://api.github.com/repos/' + owner + '/' + repo;
+  fetch(api, { headers: { 'Accept': 'application/vnd.github+json' } })
+    .then(function (r) { return r.ok ? r.json() : null; })
+    .then(function (meta) {
+      if (!meta) return null;
+      var parts = [];
+      if (meta.description) parts.push('Description: ' + meta.description);
+      if (meta.language) parts.push('Primary language: ' + meta.language);
+      if (typeof meta.stargazers_count === 'number') parts.push('Stars: ' + meta.stargazers_count);
+      if (meta.default_branch) parts.push('Default branch: ' + meta.default_branch);
+      att.content = parts.join('\n');
+      return fetch(api + '/readme', { headers: { 'Accept': 'application/vnd.github.raw' } })
+        .then(function (r) { return r.ok ? r.text() : ''; })
+        .then(function (readme) { if (readme) att.content += '\n\nREADME excerpt:\n' + readme.slice(0, 4000); });
+    })
+    .catch(function () { /* keep URL-only attachment */ })
+    .then(function () { renderAttachments(); });
+}
+
 // ─── MAIN RECONSTRUCTION ──────────────────────────────────────
 function runReconstruction() {
   const raw = document.getElementById('rawPrompt').value.trim();
@@ -1356,11 +1597,14 @@ function runReconstruction() {
     showToast(toastMsg, good !== false);
   };
 
+  // Collect any attached context (R1–R8); an empty list leaves output unchanged.
+  const attachments = collectAttachments();
+
   // Deterministic baseline is always computed — it is also the AI fallback.
-  const det = PRE.reconstruct(raw, { model: model, maxLoops: maxLoops, domain: domain });
+  const det = PRE.reconstruct(raw, { model: model, maxLoops: maxLoops, domain: domain, attachments: attachments });
 
   if (aiMode) {
-    reconstructViaAI(raw, model).then(function (ai) {
+    reconstructViaAI(raw, model, attachments).then(function (ai) {
       const parsed = PRE.parseRawPrompt(raw);
       det.variants[0] = {
         key: 'primary',
@@ -1435,6 +1679,7 @@ IMPORTANT NOTE:
 window.addEventListener('DOMContentLoaded', () => {
   lucide.createIcons();
   animateRings();
+  renderAttachments();
 });
 </script>
 </body>

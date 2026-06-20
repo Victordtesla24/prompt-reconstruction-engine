@@ -5,8 +5,22 @@ reconstruction with a current open-source model (ranked fallback chain). Shares
 `public/engine.core.js` with the frontend so the meta-prompt, model registry and
 deterministic fallback never drift.
 
-- `POST /reconstruct` `{ raw, target, reconstructor? }` → `{ ok, prompt, model, usage }`
-- `GET /health` → `{ ok, spec, reconstructors, targets, daily }`
+- `POST /reconstruct` `{ raw, target, reconstructor?, attachments? }` → `{ ok, prompt, model, usage }`
+  - `attachments`: optional array of `{ type, label, url?, content?, role?, meta? }`
+    (`type` ∈ file/image/media/github/website/terminal; `role` ∈
+    deliverable/reference/todo). Folded into the reconstructed prompt as DATA —
+    target deliverables, debugging references and a derived TO-DO list (R1–R8).
+- `POST /research` `{ token, siteUrl?, repoUrl?, models? }` → `{ ok, model, report, usage }`
+  - Dispatches the R10–R15 deep-research brief to `perplexity/sonar-deep-research`.
+    **Disabled** unless `RESEARCH_TOKEN` is set; the caller must pass that token
+    (`Authorization: Bearer <token>` or `{ "token": "…" }`). This keeps a paid
+    Perplexity call from being triggered by anonymous traffic.
+- `GET /health` → `{ ok, spec, reconstructors, targets, daily, research }`
+
+```bash
+# Deep-research dispatch (owner/CLI only):
+curl -X POST localhost:8791/research -H "Authorization: Bearer $RESEARCH_TOKEN" -d '{}'
+```
 
 Zero npm dependencies — Node 18+ built-ins + global `fetch`.
 
