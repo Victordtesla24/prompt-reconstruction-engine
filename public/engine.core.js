@@ -612,6 +612,23 @@
     return { system: system, user: user };
   }
 
+  /* ── GUARANTEE: ensure the R13/R14 execution-accuracy directives are present ──
+   * A live-AI reconstruction can pass validateReconstruction (5 layers, SDLC,
+   * ###STOP###) yet still omit the independent-verification and tooling-discovery
+   * mandates the engine injects deterministically. The backend runs this on
+   * gate-passing AI output so BOTH paths always carry the directives. The
+   * deterministic output already includes them, so this is a no-op there. */
+  function ensureAccuracyDirectives(prompt) {
+    prompt = String(prompt == null ? '' : prompt);
+    var hasVerif = /independent[\s-]*(verification|review)/i.test(prompt);
+    var hasTooling = /tooling discovery/i.test(prompt) || /discover and use[^.]{0,60}(skills|MCP|tooling)/i.test(prompt);
+    if (hasVerif && hasTooling) return prompt;
+    var add = ['', '§+ EXECUTION-ACCURACY DIRECTIVES (engine-guaranteed)'];
+    if (!hasTooling) add.push('Tooling discovery: before building from scratch, discover and use the most effective available capabilities — installed skills, plugins, MCP servers, language/runtime tooling and reputable open-source libraries — and prefer extending proven solutions over reinventing them.');
+    if (!hasVerif) add.push('Independent verification: after your own code-review, run a SEPARATE independent-reviewer pass that re-derives each requirement\'s result from actual execution evidence (test output, logs, a live check), never from your own summary; every requirement stays unverified until its evidence is shown.');
+    return prompt.replace(/\s+$/, '') + '\n' + add.join('\n') + '\n';
+  }
+
   return {
     SPEC_VERSION: SPEC_VERSION,
     SDLC_PHASES: SDLC_PHASES,
@@ -626,6 +643,7 @@
     reconstruct: reconstruct,
     buildMetaInstruction: buildMetaInstruction,
     buildResearchInstruction: buildResearchInstruction,
+    ensureAccuracyDirectives: ensureAccuracyDirectives,
     normalizeAttachments: normalizeAttachments,
     esc: esc
   };

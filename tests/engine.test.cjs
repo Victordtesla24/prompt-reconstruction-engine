@@ -393,3 +393,20 @@ test('meta-instruction also mandates independent verification + tooling discover
   assert.ok(/independent/i.test(mi) && /verif/i.test(mi), 'meta must require independent verification');
   assert.ok(/\bMCP\b|tooling|skills/i.test(mi), 'meta must require tooling discovery');
 });
+
+test('ensureAccuracyDirectives: guarantees R13/R14 on live-AI output (append if absent, no-op if present)', () => {
+  // Deterministic output already includes both directives → unchanged.
+  const det = PRE.reconstruct(RAW_LIST, { model: 'generic' }).variants[0].prompt;
+  assert.equal(PRE.ensureAccuracyDirectives(det), det, 'deterministic output already compliant → no-op');
+  // A model-style output that dropped them → both appended, original preserved.
+  const bare = 'R1: do it. §4 Quality: write tests. ###STOP###';
+  const out = PRE.ensureAccuracyDirectives(bare);
+  assert.ok(/independent[\s-]*verification/i.test(out), 'independent verification appended');
+  assert.ok(/Tooling discovery/i.test(out), 'tooling discovery appended');
+  assert.equal(out.indexOf(bare.replace(/\s+$/, '')), 0, 'original content preserved at the start');
+  // Partial (has tooling, lacks verification) → only the missing one is added, no dup.
+  const partial = 'Tooling discovery: use the right tools. ###STOP###';
+  const pout = PRE.ensureAccuracyDirectives(partial);
+  assert.ok(/independent[\s-]*verification/i.test(pout), 'adds the missing verification directive');
+  assert.equal((pout.match(/Tooling discovery/gi) || []).length, 1, 'does not duplicate the present tooling directive');
+});

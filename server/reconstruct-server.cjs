@@ -153,7 +153,7 @@ async function reconstruct(raw, target, preferred, attachments) {
     const v = PRE.validateReconstruction(out.prompt, expected);
     // Reject truncated output too: a cut-off prompt can still happen to contain
     // all the markers yet be missing its tail — never ship an incomplete prompt.
-    if (v.ok && !out.truncated) return { ok: true, prompt: out.prompt, model: model, usage: out.usage, validated: true };
+    if (v.ok && !out.truncated) return { ok: true, prompt: PRE.ensureAccuracyDirectives(out.prompt), model: model, usage: out.usage, validated: true };
     const why = out.truncated ? 'truncated (incomplete)' : 'invalid [missing: ' + v.missing.join(', ') + ']';
     errors.push(model + ': ' + why);
     console.warn('[reconstruct] ' + model + ' -> ' + why);
