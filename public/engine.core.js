@@ -125,6 +125,13 @@
 
   // ── small helpers ─────────────────────────────────────────────────────────
   function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+  // Defang ONLY the engine's own section tags if they appear inside user-derived
+  // text, so a requirement like "</foundation>" cannot prematurely close a
+  // section in the Claude XML variant. All other markup is preserved verbatim.
+  function xmlDefang(s) {
+    return String(s).replace(/<(\/?)(foundation|requirements|sdlc|quality|deliverables|context|research)(\b[^>]*)>/gi,
+      function (_, slash, tag, rest) { return '&lt;' + slash + tag + rest + '&gt;'; });
+  }
   function uniq(a) { var o = [], seen = {}; for (var i = 0; i < a.length; i++) { var k = a[i].toLowerCase(); if (!seen[k]) { seen[k] = 1; o.push(a[i]); } } return o; }
   function clamp(n, lo, hi) { return Math.max(lo, Math.min(hi, n)); }
 
@@ -173,7 +180,7 @@
 
     var reqRe     = /^\s*(?:\d+[.)]|\(\d+\)|step\s*\d+[:.)-])\s+(.+)$/i;
     var bulletRe  = /^\s*[*\-•▪●‣⁃+]\s+(.+)$/;
-    var mustRe    = /\b(must not|must|shall not|shall|never|always|do not|don't|strictly|mandatory|required to|forbidden|prohibited|no\s+\w+\s+allowed)\b/i;
+    var prohibitRe = /\b(must not|shall not|never|do not|don't|forbidden|prohibited|no\s+\w+\s+allowed)\b/i;
 
     var hasList = false;
     for (var h = 0; h < lines.length; h++) { var ht = lines[h].trim(); if (reqRe.test(ht) || bulletRe.test(ht)) { hasList = true; break; } }
@@ -186,8 +193,8 @@
         if ((m = ln.match(reqRe))) { requirements.push(m[1].trim()); }
         else if ((m = ln.match(bulletRe))) {
           var body = m[1].trim();
-          if (mustRe.test(body)) constraints.push(body); else requirements.push(body);
-        } else if (mustRe.test(ln) && ln.length < 320) {
+          if (prohibitRe.test(body)) constraints.push(body); else requirements.push(body);
+        } else if (prohibitRe.test(ln) && ln.length < 320) {
           constraints.push(ln);
         }
       }
@@ -197,7 +204,7 @@
       for (var s = 0; s < sentences.length; s++) {
         var sent = sentences[s].trim();
         if (sent.length < 6) continue;
-        if (mustRe.test(sent)) constraints.push(sent); else requirements.push(sent);
+        if (prohibitRe.test(sent)) constraints.push(sent); else requirements.push(sent);
       }
     }
 
@@ -222,6 +229,12 @@
     }
     var worker = null;
     for (var wk = 0; wk < agents.length; wk++) { if (concurrent.indexOf(agents[wk]) < 0) { worker = agents[wk]; break; } }
+    // A single sole agent must always fill the worker role — never leave it empty
+    // because the only agent was tagged concurrent-only.
+    if (agents.length && worker === null) {
+      worker = agents[0];
+      concurrent = concurrent.filter(function (a) { return a !== agents[0]; });
+    }
 
     // Domain inference.
     var lc = raw.toLowerCase(), domain = 'generic';
@@ -427,7 +440,7 @@
       if (xml) {
         bodyParts.push('<' + s.tag + '>');
         bodyParts.push(s.title);
-        bodyParts.push(s.lines.join('\n'));
+        bodyParts.push(xmlDefang(s.lines.join('\n')));
         bodyParts.push('</' + s.tag + '>');
       } else {
         bodyParts.push('## ' + s.title);

@@ -184,11 +184,20 @@ const server = http.createServer((req, res) => {
     req.on('data', (c) => { body += c; if (body.length > MAX_BODY) { tooBig = true; req.destroy(); } });
     req.on('end', async () => {
       if (tooBig) return;
+      // Flush headers early so reverse proxies (serveo/nginx) see activity
+      // during long OpenRouter reconstructions instead of timing out idle POSTs.
+      if (!res.headersSent) {
+        res.writeHead(200, {
+          'Content-Type': 'application/json',
+          'Transfer-Encoding': 'chunked',
+          'X-Accel-Buffering': 'no'
+        });
+      }
       try {
         let parsed;
-        try { parsed = JSON.parse(body || '{}'); } catch (e) { return send(res, 400, { ok: false, error: 'invalid JSON' }); }
+        try { parsed = JSON.parse(body || '{}'); } catch (e) { return res.end(JSON.stringify({ ok: false, error: 'invalid JSON' })); }
         const raw = (parsed.raw || '').toString();
-        if (!raw.trim()) return send(res, 400, { ok: false, error: 'raw prompt required' });
+        if (!raw.trim()) return res.end(JSON.stringify({ ok: false, error: 'raw prompt required' }));
         const target = PRE.MODELS[parsed.target] ? parsed.target : 'generic';
         const preferred = (parsed.reconstructor && PRE.RECONSTRUCTOR_CHAIN.indexOf(parsed.reconstructor) >= 0) ? parsed.reconstructor : null;
         const attachments = PRE.normalizeAttachments(parsed.attachments);
@@ -196,12 +205,14 @@ const server = http.createServer((req, res) => {
         const t0 = Date.now();
         const out = await reconstruct(raw, target, preferred, attachments);
         console.log('[reconstruct] target=' + target + ' attachments=' + attachments.length + ' ok=' + out.ok + ' model=' + (out.model || '-') + ' ms=' + (Date.now() - t0) + ' ip=' + ip);
+        if (res.headersSent) return res.end(JSON.stringify(out));
         return send(res, out.ok ? 200 : 502, out);
       } catch (e) {
         // The deterministic fallback makes this near-unreachable, but never
         // leave a client hanging: always answer, even on an unexpected throw.
         console.error('[reconstruct] unhandled: ' + ((e && e.stack) || e));
         if (!res.headersSent) send(res, 500, { ok: false, error: 'internal error' });
+        else res.end(JSON.stringify({ ok: false, error: 'internal error' }));
       }
     });
     return;

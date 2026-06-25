@@ -18,10 +18,12 @@
 <meta property="og:image" content="https://prompt-reconstruction-engine.web.app/og.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Prompt Reconstruction Engine — raw prompt reconstructed into a precision-engineered system prompt.">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Prompt Reconstruction Engine — Maximum Execution Accuracy">
 <meta name="twitter:description" content="Turn any raw prompt into a precision-engineered, per-model-tailored system prompt with a mandated SDLC loop.">
 <meta name="twitter:image" content="https://prompt-reconstruction-engine.web.app/og.png">
+<meta name="twitter:image:alt" content="Prompt Reconstruction Engine — raw prompt reconstructed into a precision-engineered system prompt.">
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"WebApplication","name":"Prompt Reconstruction Engine","url":"https://prompt-reconstruction-engine.web.app/","applicationCategory":"DeveloperApplication","operatingSystem":"Web","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"description":"Reconstruct any raw prompt into a precision-engineered, per-model-tailored system prompt with a mandated SDLC loop, maximising coding-agent execution accuracy.","author":{"@type":"Person","name":"Vik","email":"sarkar.vikram@gmail.com"}}
 </script>
@@ -35,16 +37,16 @@
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
 
 <!-- Lucide (deferred — non-render-blocking) -->
-<script defer src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+<script defer src="https://unpkg.com/lucide@1.21.0/dist/umd/lucide.js"></script>
 
 <!-- Live-AI backend: set content to your VPS reconstruct URL (e.g. https://<host>.<tailnet>.ts.net)
      to enable OpenRouter reconstruction. Empty = deterministic-only (fully functional, no backend). -->
-<meta name="recon-api-base" content="https://f65d3e6a59d571be-101-119-187-75.serveousercontent.com">
+<meta name="recon-api-base" content="">
 
 <!-- Reconstruction core (spec v2) — shared by frontend + VPS backend.
      ?v busts stale browser caches on engine updates; no-cache headers
      (firebase.json) keep index.html + assets fresh after every deploy. -->
-<script defer src="engine.core.js?v=2.2"></script>
+<script defer src="engine.core.js?v=2.3"></script>
 
 <style>
 /* ─── TOKENS ────────────────────────────────────────────────── */
@@ -945,7 +947,7 @@ body {
 </head>
 <body>
 
-<canvas id="bg-canvas"></canvas>
+<canvas id="bg-canvas" aria-hidden="true"></canvas>
 
 <div class="app">
 
@@ -1045,7 +1047,7 @@ body {
       constructs success criteria, and adds collision guards automatically.
     </div>
 
-    <textarea class="prompt-textarea" id="rawPrompt" placeholder="Paste your raw prompt here...
+    <textarea class="prompt-textarea" id="rawPrompt" aria-label="Raw user prompt" placeholder="Paste your raw prompt here...
 
 Example: Implement new animations for the cinematic-uiux-vfx-engineer agent. Test and debug them. You manage delegation and QA. ralphy is in another terminal — don't collide."></textarea>
 
@@ -1273,11 +1275,13 @@ function initThree() {
     mouse.y = (e.clientY / window.innerHeight - 0.5) * 0.5;
   });
 
-  let frame = 0;
+  let frame = 0, looping = false;
   // Respect prefers-reduced-motion: render one static frame, skip the rAF loop.
   const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   function animate() {
-    if (!reduceMotion) requestAnimationFrame(animate);
+    looping = false;
+    // Pause the loop when the tab is hidden (battery/GPU) or reduced-motion is set.
+    if (!reduceMotion && !document.hidden) { looping = true; requestAnimationFrame(animate); }
     frame++;
     const t = frame * 0.003;
 
@@ -1291,6 +1295,9 @@ function initThree() {
 
     renderer.render(scene, camera);
   }
+  document.addEventListener('visibilitychange', function () {
+    if (!document.hidden && !reduceMotion && !looping) { looping = true; requestAnimationFrame(animate); }
+  });
   animate();
 }
 
@@ -1393,7 +1400,7 @@ function setLiveAiAvailable(available, note, retryable) {
   var el = document.getElementById('aiToggle');
   var label = document.getElementById('aiToggleLabel');
   var noteEl = document.getElementById('aiAvailNote');
-  if (el) { el.disabled = !available; if (!available) el.checked = false; }
+  if (el) { el.disabled = !available; el.setAttribute('aria-disabled', String(!available)); if (!available) el.checked = false; }
   if (label) {
     label.style.opacity = available ? '1' : '0.55';
     label.style.cursor = available ? 'pointer' : 'not-allowed';
@@ -1406,35 +1413,65 @@ function setLiveAiAvailable(available, note, retryable) {
     noteEl.onclick = retryable ? function () { probeBackend(1); } : null;
   }
 }
-// Resolve the live backend base URL: prefer a deploy-time backend.json (lets the
-// URL change — e.g. a tunnelled self-hosted backend — without a code change),
-// then fall back to the recon-api-base meta. Result is cached on RECON_API_BASE
-// so reconstructViaAI() uses the resolved URL.
-function resolveBackendBase() {
+// Resolve the live backend: gather every candidate endpoint, probe them in
+// parallel, and use the FIRST that answers /health. Candidates, in priority:
+//   1. backend.json `urls[]` / `url` — deploy-time tunnel pointer (no code change)
+//   2. the recon-api-base meta — static fallback
+//   3. localhost:8791 — operator machine when the public tunnel is DNS-blocked
+function backendCandidates() {
   return fetch('backend.json', { cache: 'no-store' })
     .then(function (r) { return r.ok ? r.json() : null; })
-    .then(function (j) { return (j && j.url) ? String(j.url) : (window.RECON_API_BASE || ''); })
-    .catch(function () { return (window.RECON_API_BASE || ''); });
+    .catch(function () { return null; })
+    .then(function (j) {
+      var list = [];
+      if (j) {
+        if (Array.isArray(j.urls)) list = list.concat(j.urls);
+        if (j.url) list.push(j.url);
+      }
+      var meta = document.querySelector('meta[name="recon-api-base"]');
+      var metaBase = ((meta && meta.content) || '').trim();
+      if (metaBase) list.push(metaBase);
+      list.push('http://localhost:8791', 'http://127.0.0.1:8791');
+      var seen = {}, out = [];
+      for (var i = 0; i < list.length; i++) {
+        var u = String(list[i] || '').replace(/\/+$/, '');
+        if (u && !seen[u]) { seen[u] = 1; out.push(u); }
+      }
+      return out;
+    });
 }
-function probeBackend(attempt) {
-  attempt = attempt || 1;
-  resolveBackendBase().then(function (resolved) {
-    var base = (resolved || '').replace(/\/+$/, '');
-    window.RECON_API_BASE = base;
-    if (!base) {
-      setLiveAiAvailable(false, 'Live AI backend not configured — running the instant deterministic engine (fully functional). To enable Live AI, deploy the backend and set the recon-api-base meta.');
-      return;
-    }
+function probeHealth(base) {
+  return new Promise(function (resolve) {
     var ctrl = new AbortController();
     var timer = setTimeout(function () { ctrl.abort(); }, 8000);
     fetch(base + '/health', { method: 'GET', signal: ctrl.signal })
       .then(function (r) { return r.ok ? r.json() : null; })
-      .then(function (d) {
-        if (d && d.ok) setLiveAiAvailable(true, 'Live AI backend connected · ' + ((d.reconstructors && d.reconstructors[0]) || 'OpenRouter') + ' + deterministic fallback.');
-        else onProbeFail(attempt);
-      })
-      .catch(function () { onProbeFail(attempt); })
-      .then(function () { clearTimeout(timer); });
+      .then(function (d) { clearTimeout(timer); resolve(d && d.ok ? { base: base, health: d } : null); })
+      .catch(function () { clearTimeout(timer); resolve(null); });
+  });
+}
+function probeBackend(attempt) {
+  attempt = attempt || 1;
+  backendCandidates().then(function (cands) {
+    if (!cands.length) {
+      setLiveAiAvailable(false, 'Live AI backend not configured — running the instant deterministic engine (fully functional).');
+      return;
+    }
+    var remaining = cands.length, settled = false;
+    cands.forEach(function (base) {
+      probeHealth(base).then(function (hit) {
+        remaining--;
+        if (settled) return;
+        if (hit) {
+          settled = true;
+          window.RECON_API_BASE = hit.base;
+          setLiveAiAvailable(true, 'Live AI backend connected · ' + ((hit.health.reconstructors && hit.health.reconstructors[0]) || 'OpenRouter') + ' + deterministic fallback.');
+        } else if (remaining === 0) {
+          settled = true;
+          onProbeFail(attempt);
+        }
+      });
+    });
   });
 }
 // Self-healing: a transient blip (tunnel cold-start, brief restart) must not
@@ -1448,6 +1485,8 @@ function onProbeFail(attempt) {
     setLiveAiAvailable(false, 'Live AI backend unreachable — using the deterministic engine. Click to retry.', true);
   }
 }
+
+function lucideIcons() { try { if (window.lucide) lucide.createIcons(); } catch (e) {} }
 
 function criteriaChips(score) {
   return score.dims.map(function (d) {
@@ -1470,9 +1509,13 @@ async function reconstructViaAI(raw, model, attachments) {
       signal: ctrl.signal
     });
     if (!res.ok) throw new Error('backend HTTP ' + res.status);
-    const data = await res.json();
+    const text = await res.text();
+    var data = null;
+    try { data = text ? JSON.parse(text) : null; } catch (e) { data = null; }
     if (!data || !data.ok || !data.prompt) throw new Error('bad backend response');
-    return { prompt: data.prompt, model: data.model || 'openrouter' };
+    var modelSlug = String(data.model || 'openrouter');
+    if (!/^[\w./:+-]{1,64}$/.test(modelSlug)) modelSlug = 'openrouter';
+    return { prompt: data.prompt, model: modelSlug };
   } finally { clearTimeout(timer); }
 }
 
@@ -1506,9 +1549,9 @@ function renderResult(result, sourceLabel) {
     div.innerHTML =
       '<div class="recon-card-header">' +
         '<div class="recon-card-meta">' +
-          '<div class="recon-card-rank"><i data-lucide="' + card.icon + '" style="width:12px;height:12px;"></i>' + card.rank + '</div>' +
-          '<div class="recon-card-title">' + card.title + '</div>' +
-          '<div class="recon-card-sub">' + card.sub + '</div>' +
+          '<div class="recon-card-rank"><i data-lucide="' + card.icon + '" style="width:12px;height:12px;"></i>' + PRE.esc(card.rank) + '</div>' +
+          '<div class="recon-card-title">' + PRE.esc(card.title) + '</div>' +
+          '<div class="recon-card-sub">' + PRE.esc(card.sub) + '</div>' +
         '</div>' +
         '<div class="accuracy-pill"><span class="pct">' + card.score.overall + '%</span><span class="pct-label">Coverage</span></div>' +
       '</div>' +
@@ -1523,7 +1566,7 @@ function renderResult(result, sourceLabel) {
   });
 
   buildDiffTable(result.parsed);
-  lucide.createIcons();
+  lucideIcons();
   const outputSection = document.getElementById('outputSection');
   outputSection.classList.add('visible');
   setTimeout(function () { outputSection.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 100);
@@ -1584,7 +1627,7 @@ function renderAttachments() {
       '<button type="button" class="chip-remove" onclick="removeAttachment(\'' + a.id + '\')" title="Remove" aria-label="Remove attachment"><i data-lucide="x" style="width:14px;height:14px;"></i></button>' +
     '</div>';
   }).join('');
-  lucide.createIcons();
+  lucideIcons();
 }
 
 function handleFileInput(ev) {
@@ -1668,6 +1711,7 @@ function enrichGithub(att, owner, repo) {
 
 // ─── MAIN RECONSTRUCTION ──────────────────────────────────────
 function runReconstruction() {
+  if (!window.PRE) { showToast('Engine still loading — please retry in a moment', false); return; }
   const raw = document.getElementById('rawPrompt').value.trim();
   if (!raw) { showToast('Paste a raw prompt first', false); return; }
 
@@ -1740,11 +1784,11 @@ function copyPrompt(btn, id) {
   if (!el) return;
   navigator.clipboard.writeText(el.textContent).then(() => {
     btn.innerHTML = '<i data-lucide="check" style="width:12px;height:12px;"></i> Copied!';
-    lucide.createIcons();
+    lucideIcons();
     showToast('Prompt copied to clipboard');
     setTimeout(() => {
       btn.innerHTML = '<i data-lucide="copy" style="width:12px;height:12px;"></i> Copy';
-      lucide.createIcons();
+      lucideIcons();
     }, 2000);
   });
 }

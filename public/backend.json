@@ -1,0 +1,5 @@
+{
+  "url": "https://f65d3e6a59d571be-101-119-187-75.serveousercontent.com",
+  "note": "Live AI backend public endpoint. Update this file when the tunnel URL rotates; the frontend reads .url at load (resolveBackendBase) and probes <url>/health.",
+  "spec": "2.0.0"
+}
