@@ -22,3 +22,7 @@ Thumbs.db
 .env
 .claude/
 .cursor/
+
+# Large, non-deterministic per-run capture dump (the HTTP snapshot + summary.json
+# already record the evidence; the rendered-DOM blob just churns history).
+reports/browser-evidence/production-rendered-dom.html

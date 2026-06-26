@@ -1,5 +1,5 @@
 {
-  "capturedAt": "2026-06-26T02-31-16-077Z",
+  "capturedAt": "2026-06-26T04-20-19-329Z",
   "requirement": "R5: Real browser via CDP (headless Chrome on :9222, Claude Code session)",
   "environment": {
     "session": "claude-code",
@@ -10,27 +10,12 @@
     "endpoint": "http://127.0.0.1:9222/json",
     "port": 9222,
     "responding": true,
-    "targetCount": 4,
+    "targetCount": 1,
     "targets": [
-      {
-        "title": "Omnibox Popup",
-        "url": "chrome://omnibox-popup.top-chrome/",
-        "type": "browser_ui"
-      },
-      {
-        "title": "Omnibox Popup",
-        "url": "chrome://omnibox-popup.top-chrome/omnibox_popup_aim.html",
-        "type": "browser_ui"
-      },
       {
         "title": "Prompt Reconstruction Engine — Max Execution Accuracy",
         "url": "https://prompt-reconstruction-engine.web.app/?final=1782434252",
         "type": "page"
-      },
-      {
-        "title": "Service Worker chrome-extension://ghbmnnjooekpmoecnnnilnnbdlolhkhi/service_worker_bin_prod.js",
-        "url": "chrome-extension://ghbmnnjooekpmoecnnnilnnbdlolhkhi/service_worker_bin_prod.js",
-        "type": "service_worker"
       }
     ],
     "candidates": [
@@ -53,27 +38,12 @@
         "responding": true,
         "status": 200,
         "error": null,
-        "targetCount": 4,
+        "targetCount": 1,
         "targets": [
-          {
-            "title": "Omnibox Popup",
-            "url": "chrome://omnibox-popup.top-chrome/",
-            "type": "browser_ui"
-          },
-          {
-            "title": "Omnibox Popup",
-            "url": "chrome://omnibox-popup.top-chrome/omnibox_popup_aim.html",
-            "type": "browser_ui"
-          },
           {
             "title": "Prompt Reconstruction Engine — Max Execution Accuracy",
             "url": "https://prompt-reconstruction-engine.web.app/?final=1782434252",
             "type": "page"
-          },
-          {
-            "title": "Service Worker chrome-extension://ghbmnnjooekpmoecnnnilnnbdlolhkhi/service_worker_bin_prod.js",
-            "url": "chrome-extension://ghbmnnjooekpmoecnnnilnnbdlolhkhi/service_worker_bin_prod.js",
-            "type": "service_worker"
           }
         ]
       }
@@ -83,7 +53,7 @@
     "ok": true,
     "title": "Prompt Reconstruction Engine — Max Execution Accuracy",
     "url": "https://prompt-reconstruction-engine.web.app/?final=1782434252",
-    "domLength": 76074,
+    "domLength": 76496,
     "viewport": {
       "w": 1440,
       "h": 813,
@@ -91,94 +61,35 @@
       "scrollH": 1974
     },
     "screenshot": "reports/browser-evidence/production-screenshot.png",
-    "consoleMessageCount": 14,
-    "consoleErrorCount": 10,
-    "consoleErrors": [
-      {
-        "type": "log:error",
-        "text": "Access to fetch at 'http://localhost:8791/health' from origin 'https://prompt-reconstruction-engine.web.app' has been blocked by CORS policy: Permission was denied for this request to access the `loopback` address space.",
-        "url": "https://prompt-reconstruction-engine.web.app/?final=1782434252"
-      },
-      {
-        "type": "log:error",
-        "text": "Failed to load resource: net::ERR_FAILED",
-        "url": "http://localhost:8791/health"
-      },
-      {
-        "type": "log:error",
-        "text": "Access to fetch at 'http://127.0.0.1:8791/health' from origin 'https://prompt-reconstruction-engine.web.app' has been blocked by CORS policy: Permission was denied for this request to access the `loopback` address space.",
-        "url": "https://prompt-reconstruction-engine.web.app/?final=1782434252"
-      },
-      {
-        "type": "log:error",
-        "text": "Failed to load resource: net::ERR_FAILED",
-        "url": "http://127.0.0.1:8791/health"
-      },
-      {
-        "type": "log:error",
-        "text": "Failed to load resource: the server responded with a status of 511 (Network Authentication Required)",
-        "url": "https://prompt-reconstruction-engine.loca.lt/health"
-      },
-      {
-        "type": "log:error",
-        "text": "Access to fetch at 'http://localhost:8791/health' from origin 'https://prompt-reconstruction-engine.web.app' has been blocked by CORS policy: Permission was denied for this request to access the `loopback` address space.",
-        "url": "https://prompt-reconstruction-engine.web.app/?final=1782434252"
-      },
-      {
-        "type": "log:error",
-        "text": "Failed to load resource: net::ERR_FAILED",
-        "url": "http://localhost:8791/health"
-      },
-      {
-        "type": "log:error",
-        "text": "Access to fetch at 'http://127.0.0.1:8791/health' from origin 'https://prompt-reconstruction-engine.web.app' has been blocked by CORS policy: Permission was denied for this request to access the `loopback` address space.",
-        "url": "https://prompt-reconstruction-engine.web.app/?final=1782434252"
-      },
-      {
-        "type": "log:error",
-        "text": "Failed to load resource: net::ERR_FAILED",
-        "url": "http://127.0.0.1:8791/health"
-      },
-      {
-        "type": "log:error",
-        "text": "Failed to load resource: the server responded with a status of 511 (Network Authentication Required)",
-        "url": "https://prompt-reconstruction-engine.loca.lt/health"
-      }
-    ],
+    "consoleMessageCount": 0,
+    "consoleErrorCount": 0,
+    "consoleErrors": [],
     "exceptionCount": 0,
     "exceptions": [],
     "network": {
       "total": 10,
-      "failed": 1,
+      "failed": 0,
       "statuses": {
-        "200": 9,
-        "511": 1
+        "200": 10
       }
     },
     "metrics": {
       "Documents": 2,
-      "Nodes": 1434,
+      "Nodes": 1430,
       "JSEventListeners": 15,
-      "LayoutCount": 9,
-      "RecalcStyleCount": 24,
-      "ScriptDuration": 1.177756,
-      "TaskDuration": 1.831469
+      "LayoutCount": 10,
+      "RecalcStyleCount": 28,
+      "ScriptDuration": 0.424635,
+      "TaskDuration": 1.220974
     },
     "a11y": {
-      "checked": 25,
-      "lowContrast": 1,
-      "lowList": [
-        {
-          "text": "Checking Live AI backend… (retry 1 of 2)",
-          "ratio": 4.46,
-          "fontSize": 11.8,
-          "min": 4.5
-        }
-      ],
-      "worstContrast": 4.46,
+      "checked": 24,
+      "lowContrast": 0,
+      "lowList": [],
+      "worstContrast": 4.61,
       "worstSample": {
-        "text": "Checking Live AI backend… (retry 1 of 2)",
-        "ratio": 4.46,
+        "text": "Developed by Vik",
+        "ratio": 4.61,
         "fontSize": 11.84,
         "min": 4.5
       },
@@ -194,7 +105,7 @@
     "url": "https://prompt-reconstruction-engine.web.app/?final=1782434252",
     "ok": true,
     "status": 200,
-    "bodyLength": 70781
+    "bodyLength": 71234
   },
   "browserAutomation": {
     "headlessChromeLaunched": true,

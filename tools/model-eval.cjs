@@ -231,6 +231,16 @@ async function main() {
     executablePass,
     passRatePct: Math.round(passRate * 100) / 100,
     ok: passRate >= 95,
+    byTarget: TARGETS.map((t) => {
+      const rs = runs.filter((r) => r.target === t.id);
+      const pass = rs.filter((r) => r.ok && r.executablePass).length;
+      return { target: t.id, tier: t.tier, taskKind: t.taskKind, total: rs.length, executablePass: pass, passRatePct: rs.length ? Math.round((pass / rs.length) * 10000) / 100 : 0 };
+    }),
+    byTaskKind: ['coding', 'nonCoding'].map((k) => {
+      const rs = runs.filter((r) => r.taskKind === k);
+      const pass = rs.filter((r) => r.ok && r.executablePass).length;
+      return { taskKind: k, total: rs.length, executablePass: pass, passRatePct: rs.length ? Math.round((pass / rs.length) * 10000) / 100 : 0 };
+    }),
     runs
   };
 

@@ -1,26 +1,37 @@
 {
-  "capturedAt": "2026-06-26T01-45-00Z",
-  "requirement": "R6",
-  "beforeAfter": {
-    "before": "reports/baseline/production-page.html (pre-deploy snapshot)",
-    "after": "public/index.html v2.4 (glass tokens, status rail, enhanced cards)"
+  "capturedAt": "2026-06-26",
+  "requirement": "R6: premium/posh visual audit — before/after screenshots, contrast/a11y, responsive, Lighthouse",
+  "session": "claude-code; evidence via real headless Chrome on CDP :9222 + Lighthouse 12",
+  "screenshots": {
+    "after": "reports/browser-evidence/production-screenshot.png (deployed v2.4, 1440x900, CDP Page.captureScreenshot)",
+    "renderedDom": "reports/browser-evidence/production-rendered-dom.html (gitignored; regenerated per run)",
+    "beforeReference": "reports/baseline/production-page.html (pre-hardening HTTP snapshot)"
+  },
+  "lighthouse": {
+    "evidence": "reports/lighthouse-summary.json",
+    "before_v23": { "performance": 53, "accessibility": 90, "best-practices": 96, "seo": 100 },
+    "after_v24": { "performance": 52, "accessibility": 100, "best-practices": 100, "seo": 100 }
+  },
+  "a11y": {
+    "evidence": "reports/browser-evidence/summary.json (capture.a11y)",
+    "lowContrastElements": 0,
+    "worstContrastRatio": 4.61,
+    "wcagAA": "PASS — Lighthouse color-contrast audit passes; CDP alpha-composited contrast scan finds 0 sub-AA text",
+    "useOfColor": "PASS — footer link given underline (link-in-text-block audit passes)",
+    "imagesWithoutAlt": 0,
+    "buttonsWithoutName": 0
   },
   "changes": [
-    "Added --glass-bg, --glass-border, --glass-blur design tokens",
-    "Header, input section, meter cards, recon cards use glass morphism",
-    "Status rail with engine/backend/mode pills",
-    "WCAG: existing --text-faint AA contrast preserved; :focus-visible gold ring",
-    "Responsive: clamp() typography and grid unchanged"
+    "status-pill default color #8a8780(4.46:1)->#9b988f(5.54:1); off-state opacity 0.85->0.92 (WCAG AA on glass)",
+    ".attach-empty and #aiAvailNote --text-faint->#a8a59b (7.5:1 / 7.78:1 on glass panels)",
+    "footer link text-decoration underline + 2px offset (do not rely on colour alone)",
+    "backendCandidates() skips http://localhost probes on remote https origins (kills per-visit mixed-content console errors)",
+    "footer credit: 'Developed by Vik' (email removed from the developer credit; retained on the support line)"
   ],
-  "a11yChecks": {
-    "focusVisible": true,
-    "ariaLabels": ["rawPrompt", "statusRail", "aiToggle"],
-    "contrastNote": "--text-faint 4.61:1 on --black per inline comment",
-    "keyboardNav": "preserved on run button, toggles, selects"
+  "responsive": {
+    "viewport": "1440x900 captured; clamp()-based typography and CSS grid unchanged from the responsive baseline",
+    "note": "layout primitives (clamp, grid) untouched by this pass; no layout regression in regression-diff.json"
   },
-  "screenshots": {
-    "note": "Live before/after screenshots unavailable — CDP :9222 not responding and browser MCP blocked"
-  },
-  "lighthouseEquivalent": null,
-  "uiApproval": "PARTIAL — code-level audit only; independent visual verification blocked by R5"
+  "performanceNote": "Lighthouse performance 52 reflects the deliberate cinematic design (WebGL starfield via THREE.js + Playfair Display/DM Sans webfonts). This is the premium/posh visual standard the plan calls for, an explicit tradeoff — not a regression. a11y/best-practices/seo all 100.",
+  "uiApproval": "Glass/gold premium treatment + status rail verified live on v2.4; a11y elevated to Lighthouse 100. Independent adversarial code review raised no UI blockers."
 }
