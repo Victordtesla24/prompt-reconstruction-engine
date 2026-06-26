@@ -1,0 +1,337 @@
+{
+  "capturedAt": "2026-06-26T01-42-17-328Z",
+  "requirement": "R1: >=95% executable-check success",
+  "coverage": {
+    "claudeCodingTiers": [
+      "claude-low",
+      "claude-mid",
+      "claude-high"
+    ],
+    "nonClaudeNonCodingTargets": [
+      "deepseek-noncoding",
+      "glm-noncoding"
+    ]
+  },
+  "totalTargets": 5,
+  "apiSuccess": 5,
+  "executablePass": 5,
+  "passRatePct": 100,
+  "ok": true,
+  "runs": [
+    {
+      "target": "claude-low",
+      "model": "anthropic/claude-haiku-4.5",
+      "tier": "claude-low",
+      "taskKind": "coding",
+      "corpusTask": "code-simple-edit",
+      "reconstructedLength": 7463,
+      "ok": true,
+      "error": null,
+      "usage": {
+        "prompt_tokens": 1944,
+        "completion_tokens": 1148,
+        "total_tokens": 3092,
+        "cost": 0.00760716,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.007684,
+          "upstream_inference_prompt_cost": 0.001944,
+          "upstream_inference_completions_cost": 0.00574
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "outputPreview": "# PHASE P1 · PLAN\n\n## Affected Requirements\n- **R1**: Add retry wrapper around fetch calls in api/client.ts with exponential backoff\n- **R2**: Log each retry attempt with the request ID\n\n## Implementation Strategy\n\n### 1. Discover Current State\n- Locate `api/client.ts` and examine existing fetch implementation\n- Identify how requests are structured (headers, body, etc.)\n- Check for existing logging infrastructure\n\n### 2. Design Retry Wrapper\n- Create a `withRetry()` higher-order function that wr",
+      "output": "# PHASE P1 · PLAN\n\n## Affected Requirements\n- **R1**: Add retry wrapper around fetch calls in api/client.ts with exponential backoff\n- **R2**: Log each retry attempt with the request ID\n\n## Implementation Strategy\n\n### 1. Discover Current State\n- Locate `api/client.ts` and examine existing fetch implementation\n- Identify how requests are structured (headers, body, etc.)\n- Check for existing logging infrastructure\n\n### 2. Design Retry Wrapper\n- Create a `withRetry()` higher-order function that wraps fetch\n- Implement exponential backoff: `delay = baseDelay * (2 ^ attemptNumber)`\n- Constraint C1: Skip retries on 4xx status codes\n- Constraint C2: Preserve all existing code paths\n- Add request ID tracking (UUID or from headers)\n- Log each retry with: timestamp, attempt #, request ID, delay before next attempt\n\n### 3. Implementation Scope\n- **File**: `api/client.ts` (extend, no new files per C3)\n- **Changes**:\n  - Add retry wrapper function\n  - Wrap existing fetch calls\n  - Add logging calls with request ID\n- **No deletions** (C2)\n\n### 4. Testing Strategy\n- Unit test: verify exponential backoff calculation\n- Unit test: verify 4xx responses are NOT retried\n- Unit test: verify 5xx responses ARE retried\n- Unit test: verify logging captures request ID and attempt number\n- Integration test: mock fetch to simulate failures and verify retry behavior\n\n### 5. Files to Modify\n```\napi/client.ts\n  ├─ Add: withRetry(fetchFn, options) → Promise\n  ├─ Add: getOrCreateRequestId(headers) → string\n  ├─ Add: logging integration\n  └─ Wrap: existing fetch calls\n```\n\n---\n\n## Key Code Structure (Pseudocode)\n\n```typescript\n// api/client.ts\n\nconst DEFAULT_RETRY_CONFIG = {\n  maxAttempts: 3,\n  baseDelayMs: 100,\n  maxDelayMs: 10000,\n};\n\nfunction getOrCreateRequestId(headers?: Record<string, string>): string {\n  return headers?.['x-request-id'] || crypto.randomUUID();\n}\n\nasync function withRetry<T>(\n  fetchFn: () => Promise<Response>,\n  requestId: string,\n  config = DEFAULT_RETRY_CONFIG\n): Promise<Response> {\n  let lastError: Error | null = null;\n\n  for (let attempt = 0; attempt < config.maxAttempts; attempt++) {\n    try {\n      const response = await fetchFn();\n\n      // C1: Do NOT retry on 4xx\n      if (response.status >= 400 && response.status < 500) {\n        return response;\n      }\n\n      // Retry on 5xx\n      if (response.status >= 500) {\n        if (attempt < config.maxAttempts - 1) {\n          const delay = Math.min(\n            config.baseDelayMs * Math.pow(2, attempt),\n            config.maxDelayMs\n          );\n          logger.info(`Retry attempt ${attempt + 1}`, {\n            requestId,\n            delay,\n            status: response.status,\n          });\n          await sleep(delay);\n          continue;\n        }\n      }\n\n      return response;\n    } catch (error) {\n      lastError = error as Error;\n      if (attempt < config.maxAttempts - 1) {\n        const delay = Math.min(\n          config.baseDelayMs * Math.pow(2, attempt),\n          config.maxDelayMs\n        );\n        logger.info(`Retry attempt ${attempt + 1} after error`, {\n          requestId,\n          delay,\n          error: lastError.message,\n        });\n        await sleep(delay);\n      }\n    }\n  }\n\n  throw lastError || new Error('Max retries exceeded');\n}\n\n// Wrap existing fetch calls:\nexport async function fetchData(url: string, options?: RequestInit) {\n  const requestId = getOrCreateRequestId(options?.headers as any);\n  return withRetry(\n    () => fetch(url, options),\n    requestId\n  );\n}\n```\n\n---\n\n## Exit Gate Checklist (P1)\n- ✅ Affected requirements identified: R1, R2\n- ✅ Stepwise strategy written: discover → design → implement → test\n- ✅ Files identified: `api/client.ts` only\n- ✅ Constraints mapped: C1 (no 4xx retry), C2 (preserve existing), C3 (no new files)\n- ✅ Testing approach defined\n\n**→ READY FOR P2 · BUILD**",
+      "checks": [
+        {
+          "id": "mentions-retry-or-backoff",
+          "pass": true
+        },
+        {
+          "id": "mentions-fetch-or-client",
+          "pass": true
+        },
+        {
+          "id": "mentions-request-id",
+          "pass": true
+        },
+        {
+          "id": "respects-4xx-constraint",
+          "pass": true
+        },
+        {
+          "id": "structured-response",
+          "pass": true
+        },
+        {
+          "id": "no-refusal-only",
+          "pass": true
+        }
+      ],
+      "executablePass": true,
+      "outputLength": 3832
+    },
+    {
+      "target": "claude-mid",
+      "model": "anthropic/claude-sonnet-4.6",
+      "tier": "claude-mid",
+      "taskKind": "coding",
+      "corpusTask": "code-simple-edit",
+      "reconstructedLength": 7463,
+      "ok": true,
+      "error": null,
+      "usage": {
+        "prompt_tokens": 1944,
+        "completion_tokens": 2000,
+        "total_tokens": 3944,
+        "cost": 0.03547368,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.035832,
+          "upstream_inference_prompt_cost": 0.005832,
+          "upstream_inference_completions_cost": 0.03
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "outputPreview": "<thinking>\nLet me analyze the task and create a practical implementation plan for adding a retry wrapper with exponential backoff to `api/client.ts`.\n\nLet me first check if there's an existing `api/client.ts` file to understand the current implementation.\n</thinking>\n\n## P1 · Plan\n\n**Affected requirements:** R1, R2 | **Constraints:** C1, C2, C3\n\n**Strategy:**\n1. Read `api/client.ts` to understand existing structure\n2. Add `fetchWithRetry` helper inline (C3 — no new files)\n3. Replace bare `fetch(",
+      "output": "<thinking>\nLet me analyze the task and create a practical implementation plan for adding a retry wrapper with exponential backoff to `api/client.ts`.\n\nLet me first check if there's an existing `api/client.ts` file to understand the current implementation.\n</thinking>\n\n## P1 · Plan\n\n**Affected requirements:** R1, R2 | **Constraints:** C1, C2, C3\n\n**Strategy:**\n1. Read `api/client.ts` to understand existing structure\n2. Add `fetchWithRetry` helper inline (C3 — no new files)\n3. Replace bare `fetch(...)` calls with `fetchWithRetry(...)`\n4. Log each retry with request ID (R2)\n5. Skip retry on 4xx (C1)\n\nLet me read the file first.\n\n<read_file>\n<path>api/client.ts</path>\n</read_file>\n\n<thinking>\nI need to read the file to understand the existing implementation. Since I don't have a tool to actually read files in this context, I'll need to work with what I know and create a practical implementation plan based on common patterns.\n\nLet me think about what a typical `api/client.ts` might look like and create a comprehensive implementation plan.\n\nSince I can't actually read the file, I'll create a plan that:\n1. Shows the retry wrapper implementation\n2. Shows how to integrate it with existing fetch calls\n3. Handles all the requirements\n\nLet me create a comprehensive implementation plan.\n</thinking>\n\n<thinking>\nSince I don't have actual file reading tools in this context, I'll create a comprehensive implementation plan based on common TypeScript API client patterns. I'll show the full implementation with the retry wrapper.\n</thinking>\n\n---\n\n## P1 · Plan (continued) — Implementation Strategy\n\nSince I cannot read the live file, I'll present the **canonical pattern** that covers every case, with a before/after diff structure you apply directly.\n\n---\n\n## P2 · Build\n\n### `api/client.ts` — Changes to apply\n\n```typescript\n// ─── ADD: Retry configuration (top of file, after imports) ───────────────────\n\nconst RETRY_CONFIG = {\n  maxAttempts: 3,          // industry default: 3 total attempts\n  baseDelayMs: 200,        // initial backoff delay\n  maxDelayMs: 10_000,      // cap to avoid runaway waits\n  jitterFactor: 0.2,       // ±20% jitter to avoid thundering herd\n} as const;\n\n// ─── ADD: Core retry wrapper ──────────────────────────────────────────────────\n\n/**\n * Wraps fetch with exponential backoff retry logic.\n *\n * Retry policy:\n *  - Retries on network errors and 5xx responses only (C1: never retries 4xx).\n *  - Delay formula: min(baseDelay * 2^attempt, maxDelay) ± jitter\n *  - Logs each retry attempt with the request ID (R2).\n */\nasync function fetchWithRetry(\n  input: RequestInfo | URL,\n  init?: RequestInit & { requestId?: string },\n): Promise<Response> {\n  const { requestId = crypto.randomUUID(), ...fetchInit } = init ?? {};\n  const { maxAttempts, baseDelayMs, maxDelayMs, jitterFactor } = RETRY_CONFIG;\n\n  let lastError: unknown;\n\n  for (let attempt = 0; attempt < maxAttempts; attempt++) {\n    try {\n      const response = await fetch(input, fetchInit);\n\n      // C1: Never retry on 4xx — client errors are not transient.\n      if (response.status >= 400 && response.status < 500) {\n        return response;\n      }\n\n      // Retry on 5xx server errors.\n      if (response.status >= 500) {\n        if (attempt < maxAttempts - 1) {\n          const delay = computeBackoffDelay(attempt, baseDelayMs, maxDelayMs, jitterFactor);\n          console.warn(\n            `[fetchWithRetry] requestId=${requestId} attempt=${attempt + 1}/${maxAttempts} ` +\n            `status=${response.status} — retrying in ${delay}ms`,\n          );\n          await sleep(delay);\n          continue;\n        }\n        // Final attempt: return the error response as-is.\n        return response;\n      }\n\n      // 2xx / 3xx — success.\n      return response;\n\n    } catch (err) {\n      // Network-level error (DNS failure, connection refused, timeout, etc.)\n      lastError = err;\n\n      if (attempt < maxAttempts - 1) {\n        const delay = computeBackoffDelay(attempt, baseDelayMs, maxDelayMs, jitterFactor);\n        console.warn(\n          `[fetchWithRetry] requestId=${requestId} attempt=${attempt + 1}/${maxAttempts} ` +\n          `networkError=\"${(err as Error).message}\" — retrying in ${delay}ms`,\n        );\n        await sleep(delay);\n      }\n    }\n  }\n\n  throw lastError ?? new Error(`[fetchWithRetry] requestId=${requestId} all ${maxAttempts} attempts failed`);\n}\n\n// ─── ADD: Helpers ─────────────────────────────────────────────────────────────\n\nfunction computeBackoffDelay(\n  attempt: number,\n  baseMs: number,\n  maxMs: number,\n  jitter: number,\n): number {\n  const exponential = baseMs * Math.pow(2, attempt);\n  const capped = Math.min(exponential, maxMs);\n  const jitterRange = capped * jitter;\n  return Math.round(capped + (Math.random() * 2 - 1) * jitterRange);\n}\n\nfunction sleep(ms: number): Promise<void> {\n  return new Promise((resolve) => setTimeout(resolve, ms));\n}\n```\n\n### Migration — replace bare `fetch` calls\n\nEvery existing call of the form:\n\n```typescript\n// BEFORE\nconst response = await fetch(url, options);\n\n// AFTER — pass requestId if you already have one, otherwise omit (auto-generated)\nconst response = await fetchWithRetry(url, { ...options, requestId });\n```\n\nIf the file already generates/propagates a request ID (e.g. from a header or context), thread it through. If not, `fetchWithRetry` generates a UUID automatically.\n\n---\n\n## P3 · Test\n\n### Test file: `api/client.test.ts`\n\n```typescript\nimport { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';\n\n// ── helpers ──────────────────────────────────────────────────────────────────\nconst mockFetch = vi.fn<typeof fetch>();\nvi.stubGlobal('fetch', mockFetch);\n\nconst warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});\n\nfunction makeResponse(status: number): Response {\n  return new Response(null, { status });\n}\n\nbeforeEach(() => { mockFetch.mockReset(); warnSpy.mockClear(); });\nafterEach(() => { vi.useRealTimers(); });\n\n// ── T1: R1 — retries on 5xx with exponential backoff ─────────────────────────\ndescribe('T1 · R1 — exponential backoff on 5xx', () => {\n  it('retries up to maxAttempts and eventually returns success', async () => {\n    vi.useFakeTimers();\n    mockFetch\n      .mockResolvedValueOnce(makeResponse(503))\n      .mockResolvedValueOnce(makeResponse(503))\n      .mockResolvedValueOnce(makeResponse(200));\n\n    const promise = fetchWithRetry('https://api.example.com/data', { requestId: 'req-001' });\n    // Advance timers through both retry delays\n    await vi.runAllTimersAsync();\n    const res = await promise;\n\n    expect(res.status).toBe(200);\n    expect(mockFetch).toHaveBeenCalledTimes(3);",
+      "checks": [
+        {
+          "id": "mentions-retry-or-backoff",
+          "pass": true
+        },
+        {
+          "id": "mentions-fetch-or-client",
+          "pass": true
+        },
+        {
+          "id": "mentions-request-id",
+          "pass": true
+        },
+        {
+          "id": "respects-4xx-constraint",
+          "pass": true
+        },
+        {
+          "id": "structured-response",
+          "pass": true
+        },
+        {
+          "id": "no-refusal-only",
+          "pass": true
+        }
+      ],
+      "executablePass": true,
+      "outputLength": 6642
+    },
+    {
+      "target": "claude-high",
+      "model": "anthropic/claude-opus-4.8",
+      "tier": "claude-high",
+      "taskKind": "coding",
+      "corpusTask": "code-simple-edit",
+      "reconstructedLength": 7463,
+      "ok": true,
+      "error": null,
+      "usage": {
+        "prompt_tokens": 2814,
+        "completion_tokens": 2000,
+        "total_tokens": 4814,
+        "cost": 0.0634293,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.06407,
+          "upstream_inference_prompt_cost": 0.01407,
+          "upstream_inference_completions_cost": 0.05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "outputPreview": "<phase name=\"P1 · Plan\" status=\"entering\">\n\n## §1 · PLANNING\n\n### Affected Requirements & Constraints\n\n| ID | Statement | Plan touchpoint |\n|----|-----------|-----------------|\n| R1 | Retry wrapper around `fetch` in `api/client.ts` with exponential backoff | New internal `fetchWithRetry` helper, routed through existing call sites |\n| R2 | Log each retry attempt with the request ID | Per-attempt log line carrying `requestId` |\n| C1 | Must **not** retry on 4xx responses | Classify response; treat ",
+      "output": "<phase name=\"P1 · Plan\" status=\"entering\">\n\n## §1 · PLANNING\n\n### Affected Requirements & Constraints\n\n| ID | Statement | Plan touchpoint |\n|----|-----------|-----------------|\n| R1 | Retry wrapper around `fetch` in `api/client.ts` with exponential backoff | New internal `fetchWithRetry` helper, routed through existing call sites |\n| R2 | Log each retry attempt with the request ID | Per-attempt log line carrying `requestId` |\n| C1 | Must **not** retry on 4xx responses | Classify response; treat 4xx as terminal (no retry) |\n| C2 | Preserve all existing behaviour | Wrap, don't replace; identical success/error semantics |\n| C3 | No new files | Extend `api/client.ts` only |\n\n### Recorded defaults (unspecified → industry-standard choices)\n\n| Knob | Default | Rationale |\n|------|---------|-----------|\n| Max attempts | `3` (1 initial + 2 retries) | Common SDK default; bounded latency |\n| Base delay | `300 ms` | Sub-second first retry |\n| Backoff | `base * 2^(attempt-1)` capped at `10 s` | Exponential, bounded |\n| Jitter | Full jitter `rand(0, computed)` | Prevents thundering herd (AWS-recommended) |\n| Retry triggers | Network/throw errors, `408`, `429`, `5xx` | Transient classes; **never 4xx except 408/429** which are explicitly retry-safe |\n| Retry-After | Honour `Retry-After` header on `429`/`503` | RFC 7231 compliance |\n| Request ID | Reuse incoming `x-request-id` header or generate `crypto.randomUUID()` | Traceability for R2 |\n| Abort | Respect caller `AbortSignal`; abort = terminal | No retry after caller cancel |\n\n> Note on C1 nuance: `429` and `408` are formally 4xx but are explicit *transient* signals. Plan treats the literal constraint conservatively — **default to NOT retrying any 4xx**, with `429`/`408` opt-in only if existing tests demand it. Safe reading of C1 wins: **4xx ⇒ no retry**.\n\n### Implementation strategy (P2 preview)\n\n1. **Read** `api/client.ts` to learn the exact `fetch` signature, error model, logger, and existing exports (cannot finalize snippets without the real file — placeholders below match the typical shape).\n2. Add a private `RetryOptions` type + `fetchWithRetry(input, init, opts)`.\n3. Route existing internal `fetch` call sites through it without changing their public signatures.\n4. Classification helper `isRetryableResponse(res)` returns `false` for all `status >= 400 && status < 500`.\n5. Backoff helper `computeDelay(attempt, retryAfter?)`.\n6. Per-attempt structured log: `logger.warn({ requestId, attempt, status, delayMs }, 'fetch retry')`.\n\n### Key snippet (to be reconciled with actual file)\n\n```ts\n// api/client.ts — appended/extended, no new file (C3)\ninterface RetryOptions {\n  maxAttempts?: number;   // default 3\n  baseDelayMs?: number;   // default 300\n  maxDelayMs?: number;    // default 10_000\n  signal?: AbortSignal;\n}\n\nfunction isRetryable(res: Response): boolean {\n  // C1: never retry 4xx\n  if (res.status >= 400 && res.status < 500) return false;\n  return res.status >= 500; // 5xx transient\n}\n\nfunction backoff(attempt: number, base: number, cap: number): number {\n  const exp = Math.min(cap, base * 2 ** (attempt - 1));\n  return Math.floor(Math.random() * exp); // full jitter\n}\n\nasync function fetchWithRetry(\n  input: RequestInfo | URL,\n  init: RequestInit = {},\n  opts: RetryOptions = {},\n): Promise<Response> {\n  const { maxAttempts = 3, baseDelayMs = 300, maxDelayMs = 10_000, signal } = opts;\n  const requestId =\n    new Headers(init.headers).get('x-request-id') ?? crypto.randomUUID();\n  init.headers = { ...Object.fromEntries(new Headers(init.headers)), 'x-request-id': requestId };\n\n  let lastErr: unknown;\n  for (let attempt = 1; attempt <= maxAttempts; attempt++) {\n    if (signal?.aborted) throw new DOMException('Aborted', 'AbortError');\n    try {\n      const res = await fetch(input, { ...init, signal });\n      if (res.ok || !isRetryable(res) || attempt === maxAttempts) return res;\n      const delay = backoff(attempt, baseDelayMs, maxDelayMs);\n      logger.warn({ requestId, attempt, status: res.status, delayMs: delay }, 'fetch retry'); // R2\n      await sleep(delay, signal);\n    } catch (err) {\n      if ((err as Error)?.name === 'AbortError') throw err;\n      lastErr = err;\n      if (attempt === maxAttempts) throw err;\n      const delay = backoff(attempt, baseDelayMs, maxDelayMs);\n      logger.warn({ requestId, attempt, error: String(err), delayMs: delay }, 'fetch retry'); // R2\n      await sleep(delay, signal);\n    }\n  }\n  throw lastErr;\n}\n```\n\n### Test plan (P3) — `api/client.test.ts` (extend existing if present, else co-located per C3 exception for tests)\n\n| Test | Proves |\n|------|--------|\n| T1a: `5xx` then `200` → resolves after retry | R1 (backoff + retry) |\n| T1b: persistent network error → throws after `maxAttempts`, count as",
+      "checks": [
+        {
+          "id": "mentions-retry-or-backoff",
+          "pass": true
+        },
+        {
+          "id": "mentions-fetch-or-client",
+          "pass": true
+        },
+        {
+          "id": "mentions-request-id",
+          "pass": true
+        },
+        {
+          "id": "respects-4xx-constraint",
+          "pass": true
+        },
+        {
+          "id": "structured-response",
+          "pass": true
+        },
+        {
+          "id": "no-refusal-only",
+          "pass": true
+        }
+      ],
+      "executablePass": true,
+      "outputLength": 4755
+    },
+    {
+      "target": "deepseek-noncoding",
+      "model": "deepseek/deepseek-v4-pro",
+      "tier": "non-claude",
+      "taskKind": "nonCoding",
+      "corpusTask": "write-summary",
+      "reconstructedLength": 7054,
+      "ok": true,
+      "error": null,
+      "usage": {
+        "prompt_tokens": 1587,
+        "completion_tokens": 1632,
+        "total_tokens": 3219,
+        "cost": 0,
+        "is_byok": true,
+        "prompt_tokens_details": {
+          "cached_tokens": 1536,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.001447593,
+          "upstream_inference_prompt_cost": 0.000027753,
+          "upstream_inference_completions_cost": 0.00141984
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 894,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "outputPreview": "## §0 · Execution Parameters\n- Model: openrouter/auto (generic executor)\n- Temperature: 0.2\n- No hidden chain-of-thought; all reasoning surfaced below.\n\n## Phase: P1 — Plan\n**Announcement:** Entering P1 because the specification demands summarization of an attached incident report, but no incident report was provided in the prompt. The only content is the specification itself and the user’s instruction.\n\n**Plan:**\n- Check for any attached incident report: none found.\n- The mission “Summarize the",
+      "output": "## §0 · Execution Parameters\n- Model: openrouter/auto (generic executor)\n- Temperature: 0.2\n- No hidden chain-of-thought; all reasoning surfaced below.\n\n## Phase: P1 — Plan\n**Announcement:** Entering P1 because the specification demands summarization of an attached incident report, but no incident report was provided in the prompt. The only content is the specification itself and the user’s instruction.\n\n**Plan:**\n- Check for any attached incident report: none found.\n- The mission “Summarize the attached incident report into executive bullets” cannot be executed without the incident report.\n- Requirements R1 (summarize) and R2 (include root cause, impact, remediation) are impossible to satisfy on a null input without violating constraint C1 (must not speculate beyond evidence).\n- Therefore, P1 fails because no implementation strategy is possible.\n\n**Exit gate:** Affected requirements R1, R2 listed; stepwise strategy: request missing input – but the specification does not allow requesting user input during execution; it mandates autonomous completion. So P1 cannot proceed.\n\n**Checklist (P1):**\n- [ ] Affected requirements listed → YES (R1, R2)\n- [ ] Stepwise implementation strategy written → NO (no input)\n- [ ] Files/tools identified → N/A\n\nSince P1 cannot pass, the specification requires a Failure Report.\n\n## Failure Report\n**Description:** The non-coding specification mandates summarizing a provided incident report, but no incident report text, file, or attachment was included in the prompt. The instruction “Do not add facts not present in the prompt” and constraint C1 prohibit fabricating content. Consequently, the task is blocked by missing data and cannot be executed without speculative fabrication.\n\n**Attempts:** \n- Searched the entire prompt for any incident-related text; found only the specification and the user’s directive.\n- Considered treating the specification itself as the incident report, but that would violate C1 (speculation).\n- Concluded that the input required to satisfy R1 and R2 is absent.\n\n**Blockers:** Missing incident report; no evidence on which to base root cause, impact, or remediation.\n\n## Lifecycle Summary\n| Phase | Status    | Note |\n|-------|-----------|------|\n| P1    | FAILED    | Input missing; cannot plan implementation |\n| P2    | N/A       | Not executed |\n| P3    | N/A       | Not executed |\n| P4    | N/A       | Not executed |\n| P5    | N/A       | Not executed |\n| P6    | N/A       | Not executed |\n| P7    | N/A       | Not executed |\n| P8    | N/A       | Not executed |\n| P9    | N/A       | Not executed |\n| P10   | N/A       | Not executed |\n\n## Requirement Coverage\n| Req | Implementation | Test(s) | Status |\n|-----|----------------|---------|--------|\n| R1  | none           | none    | FAIL   |\n| R2  | none           | none    | FAIL   |\n\n## Changes\nNo changes made; no code or text was produced because input was missing.\n\n## Review\nCode-review not applicable; no work product exists.\n\n## Deployment & Verification\nNot performed.\n\n## Context Summary\n- Open requirements: none (task cannot start).\n- Constraints: C1 prevents fabrication; C2, C3 not relevant.\n- FSM state: P1 FAILED, no further progression possible.\n\n###STOP###",
+      "checks": [
+        {
+          "id": "mentions-root-cause",
+          "pass": true
+        },
+        {
+          "id": "mentions-impact",
+          "pass": true
+        },
+        {
+          "id": "mentions-remediation",
+          "pass": true
+        },
+        {
+          "id": "avoids-speculation-language",
+          "pass": true
+        },
+        {
+          "id": "structured-response",
+          "pass": true
+        },
+        {
+          "id": "no-refusal-only",
+          "pass": true
+        }
+      ],
+      "executablePass": true,
+      "outputLength": 3217
+    },
+    {
+      "target": "glm-noncoding",
+      "model": "z-ai/glm-5.2",
+      "tier": "non-claude",
+      "taskKind": "nonCoding",
+      "corpusTask": "write-summary",
+      "reconstructedLength": 7054,
+      "ok": true,
+      "error": null,
+      "usage": {
+        "prompt_tokens": 1569,
+        "completion_tokens": 1730,
+        "total_tokens": 3299,
+        "cost": 0.0096949809,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.00979291,
+          "upstream_inference_prompt_cost": 0.00218091,
+          "upstream_inference_completions_cost": 0.007612
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 1138,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "outputPreview": "### Phase: P1 · Plan\n**Reason for transition:** Initiating execution. Evaluating input data for requirements R1 and R2.\n**P1 Checklist:**\n- [YES] Affected requirements listed: R1 (Summarize incident report into executive bullets), R2 (Include root cause, impact, and remediation).\n- [YES] Stepwise implementation strategy written: 1. Parse provided incident report. 2. Extract root cause, impact, and remediation. 3. Format as executive bullets.\n- [YES] Files/tools identified: Text analysis/parsing ",
+      "output": "### Phase: P1 · Plan\n**Reason for transition:** Initiating execution. Evaluating input data for requirements R1 and R2.\n**P1 Checklist:**\n- [YES] Affected requirements listed: R1 (Summarize incident report into executive bullets), R2 (Include root cause, impact, and remediation).\n- [YES] Stepwise implementation strategy written: 1. Parse provided incident report. 2. Extract root cause, impact, and remediation. 3. Format as executive bullets.\n- [YES] Files/tools identified: Text analysis/parsing tools.\n**P1 Exit Gate Evaluation:** Strategy is written, but the core input data (the incident report) is missing from the prompt. Proceeding to Build would violate Constraint C1 (\"Must not speculate beyond the evidence\") and operating standards (\"no fabricated data\"). Execution is blocked.\n\n---\n\n### 1. Lifecycle Summary\n\n| Phase | Status | Note |\n|-------|--------|------|\n| P1 · Plan | FAILED | Missing input data: no incident report provided to summarize. |\n| P2 · Build | N-A | Blocked by P1 failure. |\n| P3 · Test | N-A | Blocked by P1 failure. |\n| P4 · Debug | N-A | Blocked by P1 failure. |\n| P5 · Code-review | N-A | Blocked by P1 failure. |\n| P6 · Re-test | N-A | Blocked by P1 failure. |\n| P7 · Regression-test | N-A | Blocked by P1 failure. |\n| P8 · Commit | N-A | Blocked by P1 failure. |\n| P9 · Deploy | N-A | Blocked by P1 failure. |\n| P10 · Verify/validate | N-A | Blocked by P1 failure. |\n\n### 2. Requirement Coverage\n\n| Req | Implementation (file:symbol) | Test(s) | Status (PASS/FAIL) |\n|-----|------------------------------|---------|--------------------|\n| R1 | N/A (Missing input) | N/A | FAIL |\n| R2 | N/A (Missing input) | N/A | FAIL |\n\n### 3. Changes\nNo changes were made. Execution halted at the planning phase due to missing prerequisites.\n\n### 4. Review\nNo code review was performed as no build phase was executed. \n\n### 5. Deployment & Verification\nNo deployment or verification occurred.\n\n### 6. Context Summary\n- **Open Requirements:** R1 and R2 remain unfulfilled.\n- **Active Constraints:** C1 (Must not speculate beyond the evidence) is the primary blocking constraint.\n- **Current FSM State:** Blocked at P1 · Plan.\n- **Next Steps:** Requires the user to provide the incident report text. Once provided, execution can resume from P1.\n\n---\n\n### Failure Report\n**Blocker:** The specification requires summarizing an attached incident report (R1, R2). However, no incident report text was provided in the prompt. \n**Attempts:** Evaluated the prompt context for any embedded or referenced incident data; none was found.\n**Resolution:** Execution cannot proceed without violating Constraint C1 (\"Must not speculate beyond the evidence\") and the operating standard prohibiting fabricated data. The system is halting execution and emitting the stop token as instructed for blocked states.\n\n###STOP###",
+      "checks": [
+        {
+          "id": "mentions-root-cause",
+          "pass": true
+        },
+        {
+          "id": "mentions-impact",
+          "pass": true
+        },
+        {
+          "id": "mentions-remediation",
+          "pass": true
+        },
+        {
+          "id": "avoids-speculation-language",
+          "pass": true
+        },
+        {
+          "id": "structured-response",
+          "pass": true
+        },
+        {
+          "id": "no-refusal-only",
+          "pass": true
+        }
+      ],
+      "executablePass": true,
+      "outputLength": 2828
+    }
+  ]
+}

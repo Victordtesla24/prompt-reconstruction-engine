@@ -420,8 +420,7 @@
       { tag: 'deliverables', title: '§5 · DELIVERABLES & REPORTING',                    lines: deliverablesBlock() }
     ];
 
-    // Context layer appears ONLY when external context is attached, so existing
-    // attachment-free reconstructions stay byte-for-byte identical (C1). Slotted
+    // Context layer appears ONLY when external context is attached. Slotted
     // right after Foundation as §1.1 to avoid renumbering §2–§5 (and its tests).
     if (attachments.length) {
       sections.splice(1, 0, { tag: 'context', title: '§1.1 · CONTEXT — ATTACHED REFERENCES & TO-DO SOURCES', lines: contextSection(attachments) });
@@ -431,6 +430,9 @@
       '<!-- Reconstructed by Prompt Reconstruction Engine v' + SPEC_VERSION + ' -->',
       '<!-- Target executor: ' + model.label + ' (' + model.executor + ') · Domain: ' + domainLabel + ' -->',
       reasoningPreamble(model),
+      '',
+      '## §0 · EXECUTION PARAMETERS',
+      buildExecutionParams(model).join('\n'),
       ''
     ];
 
@@ -482,6 +484,81 @@
     return { dims: dims, overall: overall };
   }
 
+  /* ── EXECUTION PARAMS: per-model runnable guidance (visible, not hidden) ── */
+  function buildExecutionParams(model) {
+    var lines = ['Target executor parameters (apply exactly when invoking this model):'];
+    lines.push('- Model slug: ' + model.executor);
+    lines.push('- Family adapter: ' + model.family);
+    if (model.reasoning === 'effort') {
+      lines.push('- reasoning_effort: "' + (/opus/i.test(model.executor) ? 'max' : 'high') + '"');
+    } else if (model.reasoning === 'think') {
+      lines.push('- thinking_mode: enabled; reasoning_effort: "xhigh"');
+      lines.push('- Planning inside <think>…</think>; code and tables in the visible answer');
+    } else if (model.reasoning === 'hybrid') {
+      lines.push('- thinking_mode: hybrid for planning/review; strict constraint adherence');
+    } else if (model.reasoning === 'always') {
+      lines.push('- always-thinking: keep plan/FSM in reasoning; summarise periodically');
+    } else {
+      lines.push('- No hidden chain-of-thought: surface every plan, checklist, and FSM transition');
+    }
+    lines.push('- Temperature: 0.2');
+    lines.push('- Completion: follow the §5 deliverables protocol — emit the stop token only when every phase SUCCESS');
+    return lines;
+  }
+
+  /* ── PRECISION AUDIT: static ambiguity + indexing checks ───────────────── */
+  var AMBIGUOUS_OPTIONAL_RE = /\b(if possible|when feasible|try to|consider|maybe|perhaps|ideally|where appropriate|as needed|if applicable|should|could|might|may want to)\b/i;
+
+  function auditPromptPrecision(prompt, parsed) {
+    prompt = String(prompt == null ? '' : prompt);
+    parsed = parsed || {};
+    var issues = [];
+    var slices = [];
+    var p0 = prompt.search(/§0 · EXECUTION PARAMETERS/i);
+    var p1 = prompt.search(/§1 · FOUNDATION|<foundation>/i);
+    if (p0 >= 0) slices.push(prompt.slice(p0, p1 > p0 ? p1 : undefined));
+    var p3 = prompt.search(/§3 · EXECUTION|EXECUTION CONTROL/i);
+    if (p3 >= 0) slices.push(prompt.slice(p3));
+    var execSlice = slices.length ? slices.join('\n') : prompt;
+    var amb = execSlice.match(AMBIGUOUS_OPTIONAL_RE);
+    if (amb) issues.push('ambiguous-optional:' + amb[0]);
+    var range = execSlice.match(/\b\d+(?:\.\d+)?\s*[–-]\s*\d+(?:\.\d+)?\b/);
+    if (range) issues.push('ambiguous-range:' + range[0]);
+
+    var reqN = (parsed.requirements && parsed.requirements.length) || 0;
+    for (var ri = 1; ri <= reqN; ri++) {
+      if (!(new RegExp('\\bR' + ri + ':')).test(prompt)) issues.push('missing-index:R' + ri);
+    }
+
+    var consN = (parsed.constraints && parsed.constraints.length) || 0;
+    var totalCons = consN + 2 + (parsed.collision ? 1 : 0);
+    for (var ci = 1; ci <= totalCons; ci++) {
+      if (!(new RegExp('\\bC' + ci + ':')).test(prompt)) issues.push('missing-index:C' + ci);
+    }
+
+    for (var pi = 0; pi < SDLC_PHASES.length; pi++) {
+      if (prompt.indexOf(SDLC_PHASES[pi].name) === -1) issues.push('phase-exact:' + SDLC_PHASES[pi].name);
+      if (prompt.indexOf(SDLC_PHASES[pi].id) === -1) issues.push('phase-id:' + SDLC_PHASES[pi].id);
+    }
+
+    return { ok: issues.length === 0, issues: issues };
+  }
+
+  /* ── BEST-OF-N: pick highest-scoring variant (deterministic tie-break) ─── */
+  function selectBestVariant(variants, parsed) {
+    if (!variants || !variants.length) return null;
+    var bestIdx = 0, bestScore = -1;
+    for (var i = 0; i < variants.length; i++) {
+      var prompt = variants[i].prompt || variants[i];
+      var sc = scoreReconstruction(parsed, prompt);
+      if (sc.overall > bestScore) {
+        bestScore = sc.overall;
+        bestIdx = i;
+      }
+    }
+    return { variant: variants[bestIdx], score: bestScore };
+  }
+
   /* ── VALIDATE: server-side gate for live-AI reconstructions ───────────────
    * A reconstruction model may silently drop SDLC phases, omit the ###STOP###
    * protocol, fail to index requirements, or get cut off by a token limit.
@@ -528,8 +605,15 @@
         else if (expected.requirements && expected.requirements.length != null) reqN = expected.requirements.length;
       }
     }
-    for (var rk = 2; rk <= reqN; rk++) {
-      if (!(new RegExp('\\bR' + rk + '\\b')).test(prompt)) missing.push('requirement-coverage:R' + rk);
+    for (var rk = 1; rk <= reqN; rk++) {
+      if (!(new RegExp('\\bR' + rk + '\\s*:')).test(prompt)) missing.push('requirement-coverage:R' + rk);
+    }
+    var conN = 0;
+    if (expected != null && typeof expected === 'object' && typeof expected.constraints === 'number') {
+      conN = expected.constraints;
+    }
+    for (var ck = 1; ck <= conN; ck++) {
+      if (!(new RegExp('\\bC' + ck + '\\s*:')).test(prompt)) missing.push('constraint-coverage:C' + ck);
     }
     var layers = [
       /foundation|identity/i,
@@ -572,7 +656,7 @@
       'Hard rules:',
       '1. LOSSLESS — preserve every requirement, constraint and nuance in the raw prompt; never drop, soften, or summarise away detail. Index requirements as R1,R2,… and constraints as C1,C2,….',
       '2. Output ONLY the reconstructed system prompt — no preamble, no explanation, no code fences around the whole thing.',
-      '3. Include these layers in order: §1 Foundation (identity, mission, stack, standards), §2 Requirements & Constraints (indexed, testable), §3 Execution Control, §4 Quality & Verification (requirement→test coverage, binary pass/fail), §5 Deliverables & Reporting.',
+      '3. Include these layers in order: §0 Execution Parameters (runnable model slug, reasoning mode, temperature guidance), §1 Foundation (identity, mission, stack, standards), §2 Requirements & Constraints (indexed, testable), §3 Execution Control, §4 Quality & Verification (requirement→test coverage, binary pass/fail), §5 Deliverables & Reporting.',
       '4. §3 MUST embed this non-skippable SDLC finite-state machine and forbid skipping any phase, using these EXACT phase names verbatim: ' +
         SDLC_PHASES.map(function (p) { return p.name; }).join(' → ') + ' → (loop to Plan). Failures force Debug then re-Test/re-Review/Regression before Commit; Commit is blocked on any failing test; Deploy is blocked before Commit.',
       '5. End with the ###STOP### completion-token protocol: emit ###STOP### only when all phases SUCCESS and every requirement has a passing test.',
@@ -657,6 +741,9 @@
     buildMetaInstruction: buildMetaInstruction,
     buildResearchInstruction: buildResearchInstruction,
     ensureAccuracyDirectives: ensureAccuracyDirectives,
+    buildExecutionParams: buildExecutionParams,
+    auditPromptPrecision: auditPromptPrecision,
+    selectBestVariant: selectBestVariant,
     normalizeAttachments: normalizeAttachments,
     esc: esc
   };

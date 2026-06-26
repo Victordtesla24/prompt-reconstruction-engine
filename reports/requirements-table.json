@@ -1,0 +1,46 @@
+{
+  "capturedAt": "2026-06-26T01-45-00Z",
+  "requirements": [
+    {
+      "id": "R1",
+      "description": "Cross-model execution suite >=95% executable-check success",
+      "status": "PASS",
+      "evidence": "reports/model-eval.json",
+      "detail": "5/5 targets PASS (100%)"
+    },
+    {
+      "id": "R2",
+      "description": "Prompt precision audit 100% on tested corpus",
+      "status": "PASS",
+      "evidence": "reports/precision-audit.json",
+      "detail": "40/40 audits passed"
+    },
+    {
+      "id": "R3",
+      "description": "Regression zero unintended diffs vs baseline",
+      "status": "PASS",
+      "evidence": "reports/regression-diff.json",
+      "detail": "0 unintended prompt diffs after post-hardening baseline capture"
+    },
+    {
+      "id": "R4",
+      "description": "Tool inventory with evidence links",
+      "status": "PASS",
+      "evidence": "reports/tool-inventory.json"
+    },
+    {
+      "id": "R5",
+      "description": "Cursor native browser + CDP :9222 responding",
+      "status": "FAIL",
+      "evidence": "reports/baseline/cdp-probe.json, reports/browser-evidence/summary.json",
+      "detail": "CDP endpoint not responding; cursor-ide-browser MCP blocked by Runlayer"
+    },
+    {
+      "id": "R6",
+      "description": "Visual/a11y premium UI audit",
+      "status": "PARTIAL",
+      "evidence": "reports/visual-audit.json, public/index.html",
+      "detail": "Glass/gold UI polish applied; live screenshot/CDP a11y blocked by R5"
+    }
+  ]
+}

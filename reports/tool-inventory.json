@@ -1,0 +1,18 @@
+{
+  "capturedAt": "2026-06-26T01-45-00Z",
+  "requirement": "R4",
+  "tools": [
+    { "name": "npm test", "type": "command", "evidence": "reports/requirements-table.json (unit 58/58 pass)" },
+    { "name": "npm run syntax", "type": "command", "evidence": "reports/requirements-table.json" },
+    { "name": "npm run baseline:capture", "type": "command", "evidence": "reports/baseline/summary.json" },
+    { "name": "npm run test:precision", "type": "command", "evidence": "reports/precision-audit.json" },
+    { "name": "npm run test:regression", "type": "command", "evidence": "reports/regression-diff.json" },
+    { "name": "npm run test:browser-evidence", "type": "command", "evidence": "reports/browser-evidence/summary.json" },
+    { "name": "npm run test:models", "type": "command", "evidence": "reports/model-eval.json" },
+    { "name": "npm run verify:production", "type": "command", "evidence": "reports/production-verify.json" },
+    { "name": "cursor-ide-browser MCP", "type": "mcp", "evidence": "reports/browser-evidence.json (blocked: Runlayer config not found)" },
+    { "name": "CDP localhost:9222", "type": "cdp", "evidence": "reports/baseline/cdp-probe.json" },
+    { "name": "OpenRouter API", "type": "external-api", "evidence": "reports/model-eval.json" },
+    { "name": "firebase deploy", "type": "command", "evidence": "reports/deploy-status.json" }
+  ]
+}

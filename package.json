@@ -6,7 +6,13 @@
   "scripts": {
     "test": "node --test tests/engine.test.cjs",
     "syntax": "python3 .github/workflows/check_js_syntax.py",
-    "server": "node server/reconstruct-server.cjs"
+    "server": "node server/reconstruct-server.cjs",
+    "test:models": "node tools/model-eval.cjs",
+    "test:browser-evidence": "node tools/browser-evidence.cjs",
+    "test:regression": "node tools/regression.cjs",
+    "test:precision": "node tools/precision-audit.cjs",
+    "verify:production": "node tools/verify-production.cjs",
+    "baseline:capture": "node tools/capture-baseline.cjs"
   },
   "license": "MIT"
 }

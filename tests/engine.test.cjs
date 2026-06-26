@@ -436,3 +436,83 @@ test('buildSystemPrompt: Claude XML variant defangs user section-tag injection',
   assert.ok(/&lt;\/foundation&gt;/.test(prompt), 'user-derived closing tag is defanged');
   assert.ok(/<requirements>/.test(prompt), 'engine section tags remain real');
 });
+
+// ── v2.4: hardening — execution params, precision audit, constraint validation, best-of-N ──
+
+test('buildExecutionParams: exposes runnable per-model guidance', () => {
+  const ds = PRE.buildExecutionParams(PRE.MODELS['deepseek-v4-pro']);
+  const joined = ds.join('\n');
+  assert.ok(/deepseek\/deepseek-v4-pro/.test(joined));
+  assert.ok(/reasoning_effort|thinking_mode/i.test(joined));
+  assert.ok(/§5|completion/i.test(joined));
+});
+
+test('reconstructed prompt includes §0 execution parameters block', () => {
+  const prompt = PRE.reconstruct(RAW_LIST, { model: 'claude-opus-4-8' }).variants[0].prompt;
+  assert.ok(/§0 · EXECUTION PARAMETERS/.test(prompt));
+  assert.ok(/anthropic\/claude-opus-4.8/.test(prompt));
+});
+
+test('auditPromptPrecision PASSES deterministic engine output', () => {
+  const r = PRE.reconstruct(RAW_LIST, { model: 'generic' });
+  const audit = PRE.auditPromptPrecision(r.variants[0].prompt, r.parsed);
+  assert.equal(audit.ok, true, 'issues: ' + (audit.issues && audit.issues.join(', ')));
+});
+
+test('auditPromptPrecision FAILS ambiguous optional language in execution sections', () => {
+  const bad = PRE.reconstruct(RAW_LIST, { model: 'generic' }).variants[0].prompt
+    .replace('Transition rules:', 'You should try to transition when possible:');
+  const audit = PRE.auditPromptPrecision(bad, PRE.parseRawPrompt(RAW_LIST));
+  assert.equal(audit.ok, false);
+  assert.ok(audit.issues.some(i => /ambiguous/.test(i)));
+});
+
+test('validateReconstruction: optional expected constraints enforces C1..Cn coverage', () => {
+  const full = PRE.reconstruct(RAW_LIST, { model: 'generic' }).variants[0].prompt;
+  const parsed = PRE.parseRawPrompt(RAW_LIST);
+  const conN = parsed.constraints.length + 2 + (parsed.collision ? 1 : 0);
+  assert.equal(PRE.validateReconstruction(full, { requirements: parsed.requirements.length, constraints: conN }).ok, true);
+  const dropped = full.replace(/C2:/g, 'X2:').replace(/\bC2\b/g, 'X2');
+  const v = PRE.validateReconstruction(dropped, { requirements: parsed.requirements.length, constraints: conN });
+  assert.equal(v.ok, false);
+  assert.ok(v.missing.some(m => /constraint-coverage/.test(m)));
+});
+
+test('validateReconstruction: expected coverage requires indexed Rk:/Ck: entries, not bare mentions', () => {
+  const full = PRE.reconstruct(RAW_LIST, { model: 'generic' }).variants[0].prompt;
+  const parsed = PRE.parseRawPrompt(RAW_LIST);
+  const conN = parsed.constraints.length + 2 + (parsed.collision ? 1 : 0);
+  const bareReq = full.replace(/R2:/g, 'R2');
+  const bareCon = full.replace(/C2:/g, 'C2');
+  const reqValidation = PRE.validateReconstruction(bareReq, { requirements: parsed.requirements.length, constraints: conN });
+  const conValidation = PRE.validateReconstruction(bareCon, { requirements: parsed.requirements.length, constraints: conN });
+  assert.ok(reqValidation.missing.includes('requirement-coverage:R2'), 'bare R2 mention must not satisfy R2 coverage');
+  assert.ok(conValidation.missing.includes('constraint-coverage:C2'), 'bare C2 mention must not satisfy C2 coverage');
+});
+
+test('auditPromptPrecision flags ambiguous optional language in §3 execution sections', () => {
+  const r = PRE.reconstruct(RAW_LIST, { model: 'generic' });
+  const bad = r.variants[0].prompt.replace('Transition rules:', 'You should try to transition when possible:');
+  const audit = PRE.auditPromptPrecision(bad, r.parsed);
+  assert.equal(audit.ok, false);
+  assert.ok(audit.issues.some(i => /ambiguous-optional/.test(i)));
+});
+
+test('validateReconstruction: constraint gate requires indexed C lines (not summary-only)', () => {
+  const full = PRE.reconstruct(RAW_LIST, { model: 'generic' }).variants[0].prompt;
+  const parsed = PRE.parseRawPrompt(RAW_LIST);
+  const conN = parsed.constraints.length + 2 + (parsed.collision ? 1 : 0);
+  const bypass = full.replace(/C1: [^\n]+\n/, '');
+  const v = PRE.validateReconstruction(bypass, { requirements: parsed.requirements.length, constraints: conN });
+  assert.equal(v.ok, false);
+  assert.ok(v.missing.some((m) => /constraint-coverage:C1/.test(m)));
+});
+
+test('selectBestVariant picks highest-scoring variant deterministically', () => {
+  const parsed = PRE.parseRawPrompt(RAW_LIST);
+  const good = PRE.reconstruct(RAW_LIST, { model: 'generic' }).variants[0].prompt;
+  const bad = 'R1: x ###STOP### foundation requirements execution quality deliverables ' + 'x'.repeat(400);
+  const pick = PRE.selectBestVariant([{ prompt: bad }, { prompt: good }], parsed);
+  assert.ok(pick.score > 0);
+  assert.equal(pick.variant.prompt, good);
+});

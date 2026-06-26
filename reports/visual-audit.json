@@ -1,0 +1,26 @@
+{
+  "capturedAt": "2026-06-26T01-45-00Z",
+  "requirement": "R6",
+  "beforeAfter": {
+    "before": "reports/baseline/production-page.html (pre-deploy snapshot)",
+    "after": "public/index.html v2.4 (glass tokens, status rail, enhanced cards)"
+  },
+  "changes": [
+    "Added --glass-bg, --glass-border, --glass-blur design tokens",
+    "Header, input section, meter cards, recon cards use glass morphism",
+    "Status rail with engine/backend/mode pills",
+    "WCAG: existing --text-faint AA contrast preserved; :focus-visible gold ring",
+    "Responsive: clamp() typography and grid unchanged"
+  ],
+  "a11yChecks": {
+    "focusVisible": true,
+    "ariaLabels": ["rawPrompt", "statusRail", "aiToggle"],
+    "contrastNote": "--text-faint 4.61:1 on --black per inline comment",
+    "keyboardNav": "preserved on run button, toggles, selects"
+  },
+  "screenshots": {
+    "note": "Live before/after screenshots unavailable — CDP :9222 not responding and browser MCP blocked"
+  },
+  "lighthouseEquivalent": null,
+  "uiApproval": "PARTIAL — code-level audit only; independent visual verification blocked by R5"
+}

@@ -1,0 +1,452 @@
+{
+  "capturedAt": "2026-06-26T01-47-26-681Z",
+  "total": 40,
+  "passed": 40,
+  "failed": 0,
+  "passRatePct": 100,
+  "requirement": "R2: 100% precision for tested corpus",
+  "ok": true,
+  "results": [
+    {
+      "id": "code-simple-edit",
+      "model": "generic",
+      "ok": true,
+      "issues": [],
+      "promptLength": 7048,
+      "validation": {
+        "ok": true,
+        "missing": []
+      }
+    },
+    {
+      "id": "code-simple-edit",
+      "model": "claude-opus-4-8",
+      "ok": true,
+      "issues": [],
+      "promptLength": 7366,
+      "validation": {
+        "ok": true,
+        "missing": []
+      }
+    },
+    {
+      "id": "code-simple-edit",
+      "model": "deepseek-v4-pro",
+      "ok": true,
+      "issues": [],
+      "promptLength": 7313,
+      "validation": {
+        "ok": true,
+        "missing": []
+      }
+    },
+    {
+      "id": "code-simple-edit",
+      "model": "glm-5-2",
+      "ok": true,
+      "issues": [],
+      "promptLength": 7058,
+      "validation": {
+        "ok": true,
+        "missing": []
+      }
+    },
+    {
+      "id": "code-simple-edit",
+      "model": "qwen3-coder-next",
+      "ok": true,
+      "issues": [],
+      "promptLength": 7066,
+      "validation": {
+        "ok": true,
+        "missing": []
+      }
+    },
+    {
+      "id": "code-multi-file",
+      "model": "generic",
+      "ok": true,
+      "issues": [],
+      "promptLength": 7066,
+      "validation": {
+        "ok": true,
+        "missing": []
+      }
+    },
+    {
+      "id": "code-multi-file",
+      "model": "claude-opus-4-8",
+      "ok": true,
+      "issues": [],
+      "promptLength": 7384,
+      "validation": {
+        "ok": true,
+        "missing": []
+      }
+    },
+    {
+      "id": "code-multi-file",
+      "model": "deepseek-v4-pro",
+      "ok": true,
+      "issues": [],
+      "promptLength": 7331,
+      "validation": {
+        "ok": true,
+        "missing": []
+      }
+    },
+    {
+      "id": "code-multi-file",
+      "model": "glm-5-2",
+      "ok": true,
+      "issues": [],
+      "promptLength": 7076,
+      "validation": {
+        "ok": true,
+        "missing": []
+      }
+    },
+    {
+      "id": "code-multi-file",
+      "model": "qwen3-coder-next",
+      "ok": true,
+      "issues": [],
+      "promptLength": 7084,
+      "validation": {
+        "ok": true,
+        "missing": []
+      }
+    },
+    {
+      "id": "code-debug",
+      "model": "generic",
+      "ok": true,
+      "issues": [],
+      "promptLength": 6992,
+      "validation": {
+        "ok": true,
+        "missing": []
+      }
+    },
+    {
+      "id": "code-debug",
+      "model": "claude-opus-4-8",
+      "ok": true,
+      "issues": [],
+      "promptLength": 7310,
+      "validation": {
+        "ok": true,
+        "missing": []
+      }
+    },
+    {
+      "id": "code-debug",
+      "model": "deepseek-v4-pro",
+      "ok": true,
+      "issues": [],
+      "promptLength": 7257,
+      "validation": {
+        "ok": true,
+        "missing": []
+      }
+    },
+    {
+      "id": "code-debug",
+      "model": "glm-5-2",
+      "ok": true,
+      "issues": [],
+      "promptLength": 7002,
+      "validation": {
+        "ok": true,
+        "missing": []
+      }
+    },
+    {
+      "id": "code-debug",
+      "model": "qwen3-coder-next",
+      "ok": true,
+      "issues": [],
+      "promptLength": 7010,
+      "validation": {
+        "ok": true,
+        "missing": []
+      }
+    },
+    {
+      "id": "code-ui",
+      "model": "generic",
+      "ok": true,
+      "issues": [],
+      "promptLength": 7002,
+      "validation": {
+        "ok": true,
+        "missing": []
+      }
+    },
+    {
+      "id": "code-ui",
+      "model": "claude-opus-4-8",
+      "ok": true,
+      "issues": [],
+      "promptLength": 7320,
+      "validation": {
+        "ok": true,
+        "missing": []
+      }
+    },
+    {
+      "id": "code-ui",
+      "model": "deepseek-v4-pro",
+      "ok": true,
+      "issues": [],
+      "promptLength": 7267,
+      "validation": {
+        "ok": true,
+        "missing": []
+      }
+    },
+    {
+      "id": "code-ui",
+      "model": "glm-5-2",
+      "ok": true,
+      "issues": [],
+      "promptLength": 7012,
+      "validation": {
+        "ok": true,
+        "missing": []
+      }
+    },
+    {
+      "id": "code-ui",
+      "model": "qwen3-coder-next",
+      "ok": true,
+      "issues": [],
+      "promptLength": 7020,
+      "validation": {
+        "ok": true,
+        "missing": []
+      }
+    },
+    {
+      "id": "code-deploy",
+      "model": "generic",
+      "ok": true,
+      "issues": [],
+      "promptLength": 7038,
+      "validation": {
+        "ok": true,
+        "missing": []
+      }
+    },
+    {
+      "id": "code-deploy",
+      "model": "claude-opus-4-8",
+      "ok": true,
+      "issues": [],
+      "promptLength": 7356,
+      "validation": {
+        "ok": true,
+        "missing": []
+      }
+    },
+    {
+      "id": "code-deploy",
+      "model": "deepseek-v4-pro",
+      "ok": true,
+      "issues": [],
+      "promptLength": 7303,
+      "validation": {
+        "ok": true,
+        "missing": []
+      }
+    },
+    {
+      "id": "code-deploy",
+      "model": "glm-5-2",
+      "ok": true,
+      "issues": [],
+      "promptLength": 7048,
+      "validation": {
+        "ok": true,
+        "missing": []
+      }
+    },
+    {
+      "id": "code-deploy",
+      "model": "qwen3-coder-next",
+      "ok": true,
+      "issues": [],
+      "promptLength": 7056,
+      "validation": {
+        "ok": true,
+        "missing": []
+      }
+    },
+    {
+      "id": "write-summary",
+      "model": "generic",
+      "ok": true,
+      "issues": [],
+      "promptLength": 6996,
+      "validation": {
+        "ok": true,
+        "missing": []
+      }
+    },
+    {
+      "id": "write-summary",
+      "model": "claude-opus-4-8",
+      "ok": true,
+      "issues": [],
+      "promptLength": 7314,
+      "validation": {
+        "ok": true,
+        "missing": []
+      }
+    },
+    {
+      "id": "write-summary",
+      "model": "deepseek-v4-pro",
+      "ok": true,
+      "issues": [],
+      "promptLength": 7261,
+      "validation": {
+        "ok": true,
+        "missing": []
+      }
+    },
+    {
+      "id": "write-summary",
+      "model": "glm-5-2",
+      "ok": true,
+      "issues": [],
+      "promptLength": 7006,
+      "validation": {
+        "ok": true,
+        "missing": []
+      }
+    },
+    {
+      "id": "write-summary",
+      "model": "qwen3-coder-next",
+      "ok": true,
+      "issues": [],
+      "promptLength": 7014,
+      "validation": {
+        "ok": true,
+        "missing": []
+      }
+    },
+    {
+      "id": "analysis-compare",
+      "model": "generic",
+      "ok": true,
+      "issues": [],
+      "promptLength": 7011,
+      "validation": {
+        "ok": true,
+        "missing": []
+      }
+    },
+    {
+      "id": "analysis-compare",
+      "model": "claude-opus-4-8",
+      "ok": true,
+      "issues": [],
+      "promptLength": 7329,
+      "validation": {
+        "ok": true,
+        "missing": []
+      }
+    },
+    {
+      "id": "analysis-compare",
+      "model": "deepseek-v4-pro",
+      "ok": true,
+      "issues": [],
+      "promptLength": 7276,
+      "validation": {
+        "ok": true,
+        "missing": []
+      }
+    },
+    {
+      "id": "analysis-compare",
+      "model": "glm-5-2",
+      "ok": true,
+      "issues": [],
+      "promptLength": 7021,
+      "validation": {
+        "ok": true,
+        "missing": []
+      }
+    },
+    {
+      "id": "analysis-compare",
+      "model": "qwen3-coder-next",
+      "ok": true,
+      "issues": [],
+      "promptLength": 7029,
+      "validation": {
+        "ok": true,
+        "missing": []
+      }
+    },
+    {
+      "id": "transform-data",
+      "model": "generic",
+      "ok": true,
+      "issues": [],
+      "promptLength": 6978,
+      "validation": {
+        "ok": true,
+        "missing": []
+      }
+    },
+    {
+      "id": "transform-data",
+      "model": "claude-opus-4-8",
+      "ok": true,
+      "issues": [],
+      "promptLength": 7296,
+      "validation": {
+        "ok": true,
+        "missing": []
+      }
+    },
+    {
+      "id": "transform-data",
+      "model": "deepseek-v4-pro",
+      "ok": true,
+      "issues": [],
+      "promptLength": 7243,
+      "validation": {
+        "ok": true,
+        "missing": []
+      }
+    },
+    {
+      "id": "transform-data",
+      "model": "glm-5-2",
+      "ok": true,
+      "issues": [],
+      "promptLength": 6988,
+      "validation": {
+        "ok": true,
+        "missing": []
+      }
+    },
+    {
+      "id": "transform-data",
+      "model": "qwen3-coder-next",
+      "ok": true,
+      "issues": [],
+      "promptLength": 6996,
+      "validation": {
+        "ok": true,
+        "missing": []
+      }
+    }
+  ],
+  "failures": []
+}

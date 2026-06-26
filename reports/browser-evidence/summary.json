@@ -1,0 +1,22 @@
+{
+  "capturedAt": "2026-06-26T01-41-58-666Z",
+  "requirement": "R5: Cursor native browser + CDP :9222",
+  "cdp": {
+    "endpoint": "http://localhost:9222/json",
+    "responding": false,
+    "status": null,
+    "targetCount": 0,
+    "targets": [],
+    "error": "AggregateError"
+  },
+  "productionFetch": {
+    "url": "https://prompt-reconstruction-engine.web.app/?final=1782434252",
+    "ok": true,
+    "status": 200,
+    "bodyLength": 68723
+  },
+  "browserAutomation": {
+    "cursorIdeBrowserMcp": "attempted — Runlayer blocked MCP in this session",
+    "externalBrowserLaunched": false
+  }
+}

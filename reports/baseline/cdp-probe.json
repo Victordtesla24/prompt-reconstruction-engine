@@ -1,0 +1,6 @@
+{
+  "capturedAt": "2026-06-26T01-47-26-973Z",
+  "endpoint": "http://localhost:9222/json",
+  "ok": false,
+  "error": "AggregateError"
+}

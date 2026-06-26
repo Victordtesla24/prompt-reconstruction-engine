@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Prompt Reconstruction Engine — Max Execution Accuracy</title>
-<meta name="description" content="Reconstruct any raw prompt into a precision-engineered system prompt — a 5-layer structure with a non-skippable plan→build→test→…→deploy→verify SDLC loop, tailored per coding agent (Claude Opus 4.8, Sonnet 4.7, DeepSeek V4 Pro, OpenRouter frontier) to maximise execution accuracy.">
+<title>Prompt Reconstruction Engine — Maximum Execution Accuracy</title>
+<meta name="description" content="Turn any raw prompt into a precision-engineered, per-model system prompt with a mandated plan→build→test→deploy→verify SDLC loop — for maximum coding-agent accuracy.">
 <link rel="canonical" href="https://prompt-reconstruction-engine.web.app/">
 <meta name="theme-color" content="#0A0A0A">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 36 36'%3E%3Crect width='36' height='36' fill='%230A0A0A'/%3E%3Cpolygon points='18,4 32,28 4,28' fill='none' stroke='%23C9A84C' stroke-width='2'/%3E%3Ccircle cx='18' cy='19' r='3' fill='%23C9A84C'/%3E%3C/svg%3E">
@@ -41,12 +41,12 @@
 
 <!-- Live-AI backend: set content to your VPS reconstruct URL (e.g. https://<host>.<tailnet>.ts.net)
      to enable OpenRouter reconstruction. Empty = deterministic-only (fully functional, no backend). -->
-<meta name="recon-api-base" content="">
+<meta name="recon-api-base" content="https://firefox-their-peak-meals.trycloudflare.com">
 
 <!-- Reconstruction core (spec v2) — shared by frontend + VPS backend.
      ?v busts stale browser caches on engine updates; no-cache headers
      (firebase.json) keep index.html + assets fresh after every deploy. -->
-<script defer src="engine.core.js?v=2.4"></script>
+<script defer src="engine.core.js?v=2.3"></script>
 
 <style>
 /* ─── TOKENS ────────────────────────────────────────────────── */
@@ -55,9 +55,6 @@
   --gold-dim:     #a07c32;
   --gold-glow:    rgba(201,168,76,0.18);
   --gold-glow-lg: rgba(201,168,76,0.08);
-  --glass-bg: rgba(17,17,17,0.72);
-  --glass-border: rgba(201,168,76,0.22);
-  --glass-blur: blur(16px) saturate(140%);
   --black:        #0A0A0A;
   --surface:      #111111;
   --surface-2:    #181818;
@@ -104,14 +101,12 @@ body {
 
 .header {
   padding: clamp(1.5rem, 4vw, 3rem) clamp(1rem, 5vw, 4rem) clamp(1rem, 2vw, 1.5rem);
-  border-bottom: 1px solid var(--glass-border);
+  border-bottom: 1px solid var(--border);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
-  background: var(--glass-bg);
-  box-shadow: 0 8px 32px rgba(0,0,0,0.35);
+  backdrop-filter: blur(12px);
+  background: rgba(10,10,10,0.7);
   position: sticky;
   top: 0;
   z-index: 100;
@@ -218,23 +213,20 @@ body {
 }
 
 .meter-card {
-  background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
+  background: var(--surface);
+  border: 1px solid var(--border);
   border-radius: var(--r-lg);
   padding: 1.25rem 1.5rem;
   min-width: 160px;
   text-align: center;
   position: relative;
   overflow: hidden;
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
-  transition: transform 0.3s var(--ease-out), box-shadow 0.3s var(--ease-out), border-color 0.3s;
+  transition: transform 0.3s var(--ease-out), box-shadow 0.3s var(--ease-out);
 }
 
 .meter-card:hover {
   transform: translateY(-3px);
-  box-shadow: 0 12px 40px rgba(201,168,76,0.16);
-  border-color: rgba(201,168,76,0.35);
+  box-shadow: 0 12px 40px rgba(201,168,76,0.12);
 }
 
 .meter-card::before {
@@ -282,16 +274,13 @@ body {
 
 /* ─── INPUT SECTION ─────────────────────────────────────────── */
 .input-section {
-  background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
+  background: var(--surface);
+  border: 1px solid var(--border);
   border-radius: var(--r-xl);
   padding: clamp(1.5rem, 3vw, 2.5rem);
   margin-bottom: clamp(2rem, 3vw, 3rem);
   position: relative;
   overflow: hidden;
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
-  box-shadow: 0 20px 60px rgba(0,0,0,0.28);
 }
 
 .input-section::before {
@@ -410,48 +399,10 @@ body {
   gap: 0.5rem;
   font-size: 0.76rem;
   color: var(--text-muted);
-  background: linear-gradient(135deg, rgba(201,168,76,0.09), rgba(201,168,76,0.03));
-  border: 1px solid var(--glass-border);
-  border-radius: var(--r-md);
-  padding: 0.75rem 1rem;
-  backdrop-filter: blur(8px);
-}
-
-.api-warning-copy {
-  flex: 1;
-  min-width: 0;
-}
-
-.status-rail {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  margin: 0.75rem 0 0.25rem;
-}
-
-.status-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  font-size: 0.68rem;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  padding: 0.28rem 0.65rem;
-  border-radius: 999px;
-  border: 1px solid var(--glass-border);
   background: rgba(201,168,76,0.06);
-  color: var(--text-muted);
-}
-
-.status-pill[data-state="ok"] { color: var(--gold); border-color: rgba(201,168,76,0.35); }
-.status-pill[data-state="warn"] { color: #e8c468; }
-.status-pill[data-state="off"] { opacity: 0.85; }
-
-.status-dot {
-  width: 6px; height: 6px;
-  border-radius: 50%;
-  background: currentColor;
-  box-shadow: 0 0 8px currentColor;
+  border: 1px solid rgba(201,168,76,0.12);
+  border-radius: var(--r-md);
+  padding: 0.6rem 0.9rem;
 }
 
 /* ─── RUN BUTTON ────────────────────────────────────────────── */
@@ -517,14 +468,12 @@ body {
 
 /* ─── ACCURACY BREAKDOWN CHART ──────────────────────────────── */
 .accuracy-chart-section {
-  background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
+  background: var(--surface);
+  border: 1px solid var(--border);
   border-radius: var(--r-xl);
   padding: clamp(1.25rem, 2.5vw, 2rem);
   position: relative;
   overflow: hidden;
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
 }
 
 .accuracy-chart-section::before {
@@ -581,21 +530,15 @@ body {
 }
 
 .recon-card {
-  background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
+  background: var(--surface);
+  border: 1px solid var(--border);
   border-radius: var(--r-xl);
   overflow: hidden;
   position: relative;
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
-  transition: box-shadow 0.3s var(--ease-out), border-color 0.3s, transform 0.3s var(--ease-out);
+  transition: box-shadow 0.3s var(--ease-out);
 }
 
-.recon-card:hover {
-  box-shadow: 0 16px 48px rgba(201,168,76,0.14);
-  border-color: rgba(201,168,76,0.32);
-  transform: translateY(-2px);
-}
+.recon-card:hover { box-shadow: 0 16px 48px rgba(201,168,76,0.1); }
 
 .recon-card-header {
   padding: 1.25rem 1.5rem 1rem;
@@ -1095,7 +1038,7 @@ body {
 
   <!-- INPUT -->
   <section class="input-section">
-    <div class="section-title">
+    <div class="section-title" role="heading" aria-level="2">
       <div class="icon-badge"><i data-lucide="terminal" style="width:14px;height:14px;"></i></div>
       Raw User Prompt Input
     </div>
@@ -1126,15 +1069,15 @@ Example: Implement new animations for the cinematic-uiux-vfx-engineer agent. Tes
           <input type="file" id="fileInput" multiple style="display:none;" onchange="handleFileInput(event)">
         </label>
         <div class="attach-inline">
-          <input class="config-input" id="ghInput" placeholder="github.com/owner/repo" onkeydown="if(event.key==='Enter'){event.preventDefault();addGithub();}">
+          <input class="config-input" id="ghInput" aria-label="GitHub repository (owner/repo)" placeholder="github.com/owner/repo" onkeydown="if(event.key==='Enter'){event.preventDefault();addGithub();}">
           <button type="button" class="attach-add" onclick="addGithub()"><i data-lucide="git-branch" style="width:13px;height:13px;"></i> Add repo</button>
         </div>
         <div class="attach-inline">
-          <input class="config-input" id="urlInput" placeholder="https://site.com/page" onkeydown="if(event.key==='Enter'){event.preventDefault();addWebsite();}">
+          <input class="config-input" id="urlInput" aria-label="Website URL to attach" placeholder="https://site.com/page" onkeydown="if(event.key==='Enter'){event.preventDefault();addWebsite();}">
           <button type="button" class="attach-add" onclick="addWebsite()"><i data-lucide="link" style="width:13px;height:13px;"></i> Add link</button>
         </div>
         <div class="attach-inline" style="flex-basis:100%;align-items:flex-start;">
-          <textarea class="config-input" id="termInput" rows="2" placeholder="Paste terminal command output (build logs, stack traces, test failures)…"></textarea>
+          <textarea class="config-input" id="termInput" rows="2" aria-label="Terminal command output to attach" placeholder="Paste terminal command output (build logs, stack traces, test failures)…"></textarea>
           <button type="button" class="attach-add" onclick="addTerminal()"><i data-lucide="terminal-square" style="width:13px;height:13px;"></i> Add output</button>
         </div>
       </div>
@@ -1177,7 +1120,7 @@ Example: Implement new animations for the cinematic-uiux-vfx-engineer agent. Tes
 
     <div class="api-warning">
       <i data-lucide="sparkles" style="width:14px;height:14px;color:#C9A84C;flex-shrink:0;margin-top:1px;"></i>
-      <div class="api-warning-copy">
+      <span>
         <label id="aiToggleLabel" style="display:inline-flex;align-items:center;gap:8px;cursor:pointer;">
           <input type="checkbox" id="aiToggle" style="accent-color:var(--gold);width:14px;height:14px;cursor:pointer;">
           <strong style="color:var(--gold);">Live AI reconstruction</strong>
@@ -1186,12 +1129,7 @@ Example: Implement new animations for the cinematic-uiux-vfx-engineer agent. Tes
         (<code style="color:var(--gold);background:rgba(201,168,76,0.1);padding:0 4px;border-radius:3px;">z-ai/glm-5.2</code> → <code style="color:var(--gold);background:rgba(201,168,76,0.1);padding:0 4px;border-radius:3px;">deepseek/deepseek-v4-pro</code>)
         performs the reconstruction through the secure backend. Off by default; the deterministic built-in engine runs instantly and is always the fallback.
         <span id="aiAvailNote" style="display:block;margin-top:6px;font-size:0.74rem;color:var(--text-faint);"></span>
-        <div class="status-rail" id="statusRail" aria-label="Engine status">
-          <span class="status-pill" id="statusEngine" data-state="ok"><span class="status-dot"></span>Engine ready</span>
-          <span class="status-pill" id="statusBackend" data-state="off"><span class="status-dot"></span>Backend probing</span>
-          <span class="status-pill" id="statusMode" data-state="ok"><span class="status-dot"></span>Deterministic</span>
-        </div>
-      </div>
+      </span>
     </div>
 
     <button class="run-btn" id="runBtn" onclick="runReconstruction()">
@@ -1206,7 +1144,7 @@ Example: Implement new animations for the cinematic-uiux-vfx-engineer agent. Tes
 
     <!-- Accuracy breakdown chart -->
     <div class="accuracy-chart-section">
-      <div class="section-title">
+      <div class="section-title" role="heading" aria-level="2">
         <div class="icon-badge"><i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i></div>
         Execution Accuracy Breakdown
       </div>
@@ -1223,7 +1161,7 @@ Example: Implement new animations for the cinematic-uiux-vfx-engineer agent. Tes
 
     <!-- Diff table -->
     <div class="diff-section">
-      <div class="section-title">
+      <div class="section-title" role="heading" aria-level="2">
         <div class="icon-badge"><i data-lucide="diff" style="width:14px;height:14px;"></i></div>
         Raw vs Reconstructed — Issue Map
       </div>
@@ -1357,6 +1295,7 @@ function initThree() {
 
     renderer.render(scene, camera);
   }
+  // Resume on return to a visible tab.
   document.addEventListener('visibilitychange', function () {
     if (!document.hidden && !reduceMotion && !looping) { looping = true; requestAnimationFrame(animate); }
   });
@@ -1457,16 +1396,6 @@ window.RECON_API_BASE = window.RECON_API_BASE || (function () {
 // (no scary "unavailable" error). The deterministic engine is always functional,
 // so the page is never in a broken state.
 window.__liveAiAvailable = false;
-function setStatusPill(id, text, state) {
-  var pill = document.getElementById(id);
-  if (!pill) return;
-  pill.dataset.state = state || 'off';
-  var dot = pill.querySelector('.status-dot');
-  pill.textContent = '';
-  if (dot) pill.appendChild(dot); else pill.innerHTML = '<span class="status-dot"></span>';
-  pill.appendChild(document.createTextNode(text));
-}
-
 function setLiveAiAvailable(available, note, retryable) {
   window.__liveAiAvailable = !!available;
   var el = document.getElementById('aiToggle');
@@ -1484,14 +1413,18 @@ function setLiveAiAvailable(available, note, retryable) {
     noteEl.style.textDecoration = retryable ? 'underline dotted' : 'none';
     noteEl.onclick = retryable ? function () { probeBackend(1); } : null;
   }
-  setStatusPill('statusBackend', available ? 'Backend online' : (retryable ? 'Backend retry' : 'Backend offline'), available ? 'ok' : (retryable ? 'warn' : 'off'));
-  setStatusPill('statusMode', available && el && el.checked ? 'Live AI' : 'Deterministic', available && el && el.checked ? 'warn' : 'ok');
 }
 // Resolve the live backend: gather every candidate endpoint, probe them in
-// parallel, and use the FIRST that answers /health. Candidates, in priority:
-//   1. backend.json `urls[]` / `url` — deploy-time tunnel pointer (no code change)
+// parallel, and use the FIRST that answers /health (they all front the same
+// backend). Candidates, in priority order:
+//   1. backend.json `urls[]` / `url` — deploy-time pointer to the public tunnel
 //   2. the recon-api-base meta — static fallback
-//   3. localhost:8791 — operator machine when the public tunnel is DNS-blocked
+//   3. the same-machine self-hosted backend — http://localhost:8791 / 127.0.0.1
+// The localhost candidate is what keeps Live AI enabled for the operator even
+// when their own network/DNS blocks the public tunnel host (e.g. an ad-block
+// resolver that NXDOMAINs *.trycloudflare.com). Without it the toggle greys out
+// on every refresh. Public visitors fail the localhost probe in milliseconds
+// (nothing is listening on their machine) and transparently use the tunnel.
 function backendCandidates() {
   return fetch('backend.json', { cache: 'no-store' })
     .then(function (r) { return r.ok ? r.json() : null; })
@@ -1502,9 +1435,7 @@ function backendCandidates() {
         if (Array.isArray(j.urls)) list = list.concat(j.urls);
         if (j.url) list.push(j.url);
       }
-      var meta = document.querySelector('meta[name="recon-api-base"]');
-      var metaBase = ((meta && meta.content) || '').trim();
-      if (metaBase) list.push(metaBase);
+      if (window.RECON_API_BASE) list.push(window.RECON_API_BASE);
       list.push('http://localhost:8791', 'http://127.0.0.1:8791');
       var seen = {}, out = [];
       for (var i = 0; i < list.length; i++) {
@@ -1531,6 +1462,7 @@ function probeBackend(attempt) {
       setLiveAiAvailable(false, 'Live AI backend not configured — running the instant deterministic engine (fully functional).');
       return;
     }
+    // First candidate to answer /health wins — no waiting on slow/blocked ones.
     var remaining = cands.length, settled = false;
     cands.forEach(function (base) {
       probeHealth(base).then(function (hit) {
@@ -1560,7 +1492,18 @@ function onProbeFail(attempt) {
   }
 }
 
-function lucideIcons() { try { if (window.lucide) lucide.createIcons(); } catch (e) {} }
+// Guarded Lucide refresh: a blocked/slow icon CDN must never throw on a hot path
+// and abort the render (the DOMContentLoaded init guard covers only first load).
+function lucideIcons() {
+  try {
+    if (!window.lucide) return;
+    lucide.createIcons();
+    // Lucide icons are decorative — buttons/links carry their own text or
+    // aria-label — so hide the generated SVGs from assistive tech (WCAG 1.1.1).
+    var svgs = document.querySelectorAll('svg.lucide');
+    for (var i = 0; i < svgs.length; i++) { svgs[i].setAttribute('aria-hidden', 'true'); svgs[i].setAttribute('focusable', 'false'); }
+  } catch (e) {}
+}
 
 function criteriaChips(score) {
   return score.dims.map(function (d) {
@@ -1583,13 +1526,13 @@ async function reconstructViaAI(raw, model, attachments) {
       signal: ctrl.signal
     });
     if (!res.ok) throw new Error('backend HTTP ' + res.status);
-    const text = await res.text();
-    var data = null;
-    try { data = text ? JSON.parse(text) : null; } catch (e) { data = null; }
+    const data = await res.json();
     if (!data || !data.ok || !data.prompt) throw new Error('bad backend response');
-    var modelSlug = String(data.model || 'openrouter');
-    if (!/^[\w./:+-]{1,64}$/.test(modelSlug)) modelSlug = 'openrouter';
-    return { prompt: data.prompt, model: modelSlug };
+    // Defence-in-depth: the model label is rendered into the DOM, so constrain it
+    // to a safe slug allowlist regardless of what the backend returns.
+    var model = String(data.model || 'openrouter');
+    if (!/^[\w./:+-]{1,64}$/.test(model)) model = 'openrouter';
+    return { prompt: data.prompt, model: model };
   } finally { clearTimeout(timer); }
 }
 
@@ -1882,7 +1825,7 @@ document.getElementById('rawPrompt').addEventListener('input', function() {
   document.getElementById('charCount').textContent = this.value.length + ' characters';
 });
 
-// ─── EXAMPLE PROMPT ───────────────────────────────────────────
+// ─── EXAMPLE PROMPT ──────────────────────────────────────��────
 (function prefillExample() {
   const example = `1. Implement new animations/feature development capability within \`cinematic-uiux-vfx-engineer\` agent to create atleast 3 new, additional to the existing animations, visual effects, VFX, after effects, visualisations, infographics, interactive and dynamic visuals etc. that matches with the existing website design, layout, UI/UX structure, colour palette, fonts etc., when asked to create additional animations
 
@@ -1908,16 +1851,11 @@ IMPORTANT NOTE:
 window.addEventListener('DOMContentLoaded', () => {
   // Deferred CDNs (three.js, lucide) have executed by now. Guard each so a slow/
   // failed CDN can't break the core flow (attachments, backend probe).
-  try { if (window.lucide) lucide.createIcons(); } catch (e) {}
+  lucideIcons();
   try { if (window.THREE) initThree(); } catch (e) {}
   animateRings();
-  setStatusPill('statusEngine', window.PRE ? 'Engine ready' : 'Engine loading', window.PRE ? 'ok' : 'warn');
   probeBackend();
   renderAttachments();
-  var aiEl = document.getElementById('aiToggle');
-  if (aiEl) aiEl.addEventListener('change', function () {
-    setStatusPill('statusMode', (aiEl.checked && window.__liveAiAvailable) ? 'Live AI' : 'Deterministic', aiEl.checked ? 'warn' : 'ok');
-  });
 });
 </script>
 </body>

@@ -136,7 +136,9 @@ async function reconstruct(raw, target, preferred, attachments) {
   // gate so heuristic over-splitting doesn't trigger needless fallbacks.
   const parsed = PRE.parseRawPrompt(raw);
   const listStructured = /(^|\n)\s*(?:\d+[.)]|\(\d+\)|[*\-•]\s)/.test(raw);
-  const expected = listStructured ? { requirements: parsed.requirements.length } : null;
+  const expectedReq = listStructured ? { requirements: parsed.requirements.length } : null;
+  const conBase = parsed.constraints.length + 2 + (parsed.collision ? 1 : 0);
+  const expected = listStructured ? { requirements: parsed.requirements.length, constraints: conBase } : expectedReq;
   const chain = [];
   if (preferred) chain.push(preferred);
   for (const m of PRE.RECONSTRUCTOR_CHAIN) if (chain.indexOf(m) < 0) chain.push(m);
@@ -151,10 +153,11 @@ async function reconstruct(raw, target, preferred, attachments) {
     // Trust nothing: a model may drop SDLC phases, omit ###STOP###, fail to
     // index requirements, or truncate. Only ship output that passes the gate.
     const v = PRE.validateReconstruction(out.prompt, expected);
+    const precision = PRE.auditPromptPrecision(out.prompt, parsed);
     // Reject truncated output too: a cut-off prompt can still happen to contain
     // all the markers yet be missing its tail — never ship an incomplete prompt.
-    if (v.ok && !out.truncated) return { ok: true, prompt: PRE.ensureAccuracyDirectives(out.prompt), model: model, usage: out.usage, validated: true };
-    const why = out.truncated ? 'truncated (incomplete)' : 'invalid [missing: ' + v.missing.join(', ') + ']';
+    if (v.ok && precision.ok && !out.truncated) return { ok: true, prompt: PRE.ensureAccuracyDirectives(out.prompt), model: model, usage: out.usage, validated: true };
+    const why = out.truncated ? 'truncated (incomplete)' : (!v.ok ? 'invalid [missing: ' + v.missing.join(', ') + ']' : 'precision [issues: ' + precision.issues.join(', ') + ']');
     errors.push(model + ': ' + why);
     console.warn('[reconstruct] ' + model + ' -> ' + why);
   }
