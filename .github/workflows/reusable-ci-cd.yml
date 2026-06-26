@@ -1,0 +1,273 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# GLOBAL REUSABLE CI/CD WORKFLOW  (canonical — do not fork per project)
+#
+# One hardened pipeline for every project. Callers pass project-specific options;
+# every stage is opt-in (runs only when its input is set), so the SAME file serves
+# static sites, Node/Python apps, and VPS backends.
+#
+# Pipeline: checkout → setup(node/python) → install → lint → custom-check → test →
+#           build → deploy(firebase|github-pages|netlify|vps-ssh|none) → smoke.
+#
+# Hardening baked in: least-privilege permissions, concurrency (no overlapping
+# deploys), per-job timeouts, secret-presence gates, retries+idempotency, optional
+# dependency caching, post-deploy smoke verification, and a job summary. Uses ONLY
+# official actions/* + CLIs (no unpinned third-party actions).
+#
+# Call it (same repo):   uses: ./.github/workflows/reusable-ci-cd.yml
+# Call it (other repo):  uses: Victordtesla24/prompt-reconstruction-engine/.github/workflows/reusable-ci-cd.yml@main
+# Pass secrets with:     secrets: inherit
+# ─────────────────────────────────────────────────────────────────────────────
+name: Reusable CI/CD
+
+on:
+  workflow_call:
+    inputs:
+      runs_on:            { type: string,  default: ubuntu-latest }
+      working_directory:  { type: string,  default: "." }
+      # ── setup ──
+      node_version:       { type: string,  default: "" }   # e.g. "20"; empty = skip Node
+      node_cache:         { type: string,  default: "" }   # "npm"/"yarn"/"pnpm" — ONLY if a lockfile exists
+      python_version:     { type: string,  default: "" }   # e.g. "3.12"; empty = skip Python
+      use_uv:             { type: boolean, default: false } # install uv for Python projects
+      install_cmd:        { type: string,  default: "" }   # empty = auto-detect (npm ci / npm install / uv sync / pip)
+      # ── quality gates (run only if non-empty) ──
+      lint_cmd:           { type: string,  default: "" }
+      custom_check_cmd:   { type: string,  default: "" }   # e.g. "python3 .github/workflows/check_js_syntax.py"
+      test_cmd:           { type: string,  default: "" }
+      build_cmd:          { type: string,  default: "" }
+      # ── deploy ──
+      deploy:             { type: boolean, default: true }
+      deploy_target:      { type: string,  default: none } # firebase | github-pages | netlify | vps-ssh | none
+      firebase_project:   { type: string,  default: "" }
+      pages_dir:          { type: string,  default: "" }   # github-pages: dir to publish (e.g. "." or "dist")
+      netlify_site_id:    { type: string,  default: "" }
+      netlify_dir:        { type: string,  default: "" }
+      vps_host:           { type: string,  default: "" }
+      vps_user:           { type: string,  default: root }
+      vps_src:            { type: string,  default: "" }   # local path (trailing-slash semantics of rsync)
+      vps_dest:           { type: string,  default: "" }   # remote path
+      vps_post_cmd:       { type: string,  default: "" }   # e.g. "systemctl restart recon-backend"
+      # ── post-deploy smoke ──
+      smoke_url:          { type: string,  default: "" }
+      smoke_expect_code:  { type: string,  default: "200" }
+      smoke_retries:      { type: number,  default: 6 }
+      smoke_delay:        { type: number,  default: 10 }
+    secrets:
+      FIREBASE_SERVICE_ACCOUNT: { required: false }
+      NETLIFY_AUTH_TOKEN:       { required: false }
+      VPS_SSH_KEY:              { required: false }
+      VPS_KNOWN_HOSTS:         { required: false }
+
+# Serialize runs per ref; never cancel an in-flight deploy (avoids partial releases).
+concurrency:
+  group: cicd-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build-test:
+    name: Build · Test · Deploy
+    runs-on: ${{ inputs.runs_on }}
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    defaults:
+      run:
+        working-directory: ${{ inputs.working_directory }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        if: inputs.node_version != ''
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ inputs.node_version }}
+          cache: ${{ inputs.node_cache }}
+
+      - name: Setup Python
+        if: inputs.python_version != ''
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ inputs.python_version }}
+
+      - name: Install dependencies
+        env:
+          INSTALL_CMD: ${{ inputs.install_cmd }}
+          USE_UV: ${{ inputs.use_uv }}
+        run: |
+          set -euo pipefail
+          # uv via the official installer (no third-party action in the supply chain)
+          if [ "$USE_UV" = "true" ] && ! command -v uv >/dev/null 2>&1; then python -m pip install --upgrade uv; fi
+          if [ -n "$INSTALL_CMD" ]; then
+            echo "install: custom -> $INSTALL_CMD"; bash -lc "$INSTALL_CMD"
+          elif [ -f package-lock.json ]; then
+            echo "install: npm ci"; npm ci
+          elif [ -f package.json ]; then
+            echo "install: npm install"; npm install
+          elif [ "$USE_UV" = "true" ] && [ -f pyproject.toml ]; then
+            echo "install: uv sync"; uv sync
+          elif [ -f requirements.txt ]; then
+            echo "install: pip"; python -m pip install -r requirements.txt
+          else
+            echo "install: nothing to do (no manifest)"
+          fi
+
+      - name: Lint
+        if: inputs.lint_cmd != ''
+        env:
+          LINT_CMD: ${{ inputs.lint_cmd }}
+        run: bash -lc "$LINT_CMD"
+
+      - name: Custom check
+        if: inputs.custom_check_cmd != ''
+        env:
+          CHECK_CMD: ${{ inputs.custom_check_cmd }}
+        run: bash -lc "$CHECK_CMD"
+
+      - name: Test
+        if: inputs.test_cmd != ''
+        env:
+          TEST_CMD: ${{ inputs.test_cmd }}
+        run: bash -lc "$TEST_CMD"
+
+      - name: Build
+        if: inputs.build_cmd != ''
+        env:
+          BUILD_CMD: ${{ inputs.build_cmd }}
+        run: bash -lc "$BUILD_CMD"
+
+      # ── Deploy: Firebase Hosting (retry + idempotent release handling) ──
+      - name: Deploy · Firebase
+        if: inputs.deploy && inputs.deploy_target == 'firebase'
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          FIREBASE_PROJECT: ${{ inputs.firebase_project }}
+        run: |
+          set -uo pipefail
+          if [ -z "${FIREBASE_SERVICE_ACCOUNT:-}" ]; then echo "::error::FIREBASE_SERVICE_ACCOUNT secret is not set"; exit 1; fi
+          npm install -g firebase-tools@latest
+          printf '%s' "$FIREBASE_SERVICE_ACCOUNT" > "$RUNNER_TEMP/sa.json"
+          export GOOGLE_APPLICATION_CREDENTIALS="$RUNNER_TEMP/sa.json"
+          ok=1
+          for attempt in 1 2 3; do
+            OUT=$(firebase deploy --only hosting --project "$FIREBASE_PROJECT" --non-interactive 2>&1); CODE=$?
+            if [ "$CODE" -eq 0 ]; then ok=0; break; fi
+            if echo "$OUT" | grep -qiE 'is the current active version'; then echo "::notice::release already applied (idempotent)"; ok=0; break; fi
+            # Print output only on failure (avoid leaking tokens/URLs the masker can't catch on success).
+            echo "$OUT"
+            echo "::warning::firebase deploy attempt $attempt failed (code $CODE); retrying in 10s"; sleep 10
+          done
+          rm -f "$RUNNER_TEMP/sa.json"
+          if [ "$ok" -eq 0 ]; then echo "deploy ok"; else echo "::error::firebase deploy failed after 3 attempts"; exit 1; fi
+
+      # ── Deploy: Netlify (official CLI; no third-party action) ──
+      - name: Deploy · Netlify
+        if: inputs.deploy && inputs.deploy_target == 'netlify'
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: ${{ inputs.netlify_site_id }}
+          NETLIFY_DIR: ${{ inputs.netlify_dir }}
+        run: |
+          set -euo pipefail
+          if [ -z "${NETLIFY_AUTH_TOKEN:-}" ]; then echo "::error::NETLIFY_AUTH_TOKEN secret is not set"; exit 1; fi
+          npx --yes netlify-cli@latest deploy --prod --no-build --dir "$NETLIFY_DIR" --site "$NETLIFY_SITE_ID"
+
+      # ── Deploy: VPS over SSH + optional service restart ──
+      - name: Deploy · VPS (ssh/rsync)
+        if: inputs.deploy && inputs.deploy_target == 'vps-ssh'
+        env:
+          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+          VPS_KNOWN_HOSTS: ${{ secrets.VPS_KNOWN_HOSTS }}
+          VPS_HOST: ${{ inputs.vps_host }}
+          VPS_USER: ${{ inputs.vps_user }}
+          VPS_SRC: ${{ inputs.vps_src }}
+          VPS_DEST: ${{ inputs.vps_dest }}
+          VPS_POST_CMD: ${{ inputs.vps_post_cmd }}
+        run: |
+          set -euo pipefail
+          if [ -z "${VPS_SSH_KEY:-}" ]; then echo "::error::VPS_SSH_KEY secret is not set"; exit 1; fi
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          printf '%s\n' "$VPS_SSH_KEY" > ~/.ssh/id_deploy && chmod 600 ~/.ssh/id_deploy
+          if [ -n "${VPS_KNOWN_HOSTS:-}" ]; then printf '%s\n' "$VPS_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          else echo "::warning::VPS_KNOWN_HOSTS not set — using ssh-keyscan (TOFU)"; ssh-keyscan -H "$VPS_HOST" >> ~/.ssh/known_hosts 2>/dev/null; fi
+          chmod 600 ~/.ssh/known_hosts
+          SSH="ssh -i ~/.ssh/id_deploy -o StrictHostKeyChecking=yes"
+          rsync -az --delete -e "$SSH" "$VPS_SRC" "$VPS_USER@$VPS_HOST:$VPS_DEST"
+          if [ -n "${VPS_POST_CMD:-}" ]; then $SSH "$VPS_USER@$VPS_HOST" "$VPS_POST_CMD"; fi
+          rm -f ~/.ssh/id_deploy
+
+      # ── github-pages: upload the artifact here; the deploy-pages job publishes it ──
+      - name: Upload Pages artifact
+        if: inputs.deploy && inputs.deploy_target == 'github-pages'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ${{ inputs.pages_dir }}
+
+      # ── Post-deploy smoke (skipped for github-pages — verified in its own job) ──
+      - name: Smoke check
+        if: inputs.smoke_url != '' && inputs.deploy_target != 'github-pages'
+        env:
+          URL: ${{ inputs.smoke_url }}
+          EXPECT: ${{ inputs.smoke_expect_code }}
+          RETRIES: ${{ inputs.smoke_retries }}
+          DELAY: ${{ inputs.smoke_delay }}
+        run: |
+          set -uo pipefail
+          code="000"
+          for i in $(seq 1 "$RETRIES"); do
+            code=$(curl -sS -o /dev/null -m 25 -w '%{http_code}' "$URL" || echo "000")
+            echo "smoke attempt $i/$RETRIES: HTTP $code"
+            [ "$code" = "$EXPECT" ] && { echo "smoke ok"; break; }
+            sleep "$DELAY"
+          done
+          [ "$code" = "$EXPECT" ] || { echo "::error::smoke failed: $URL -> $code (expected $EXPECT)"; exit 1; }
+
+      - name: Summary
+        if: always()
+        env:
+          TARGET: ${{ inputs.deploy_target }}
+          DEPLOY: ${{ inputs.deploy }}
+          SMOKE: ${{ inputs.smoke_url }}
+        run: |
+          {
+            echo "### CI/CD summary"
+            echo "- deploy: \`$DEPLOY\` · target: \`$TARGET\`"
+            echo "- gates: lint=${{ inputs.lint_cmd != '' }} check=${{ inputs.custom_check_cmd != '' }} test=${{ inputs.test_cmd != '' }} build=${{ inputs.build_cmd != '' }}"
+            [ -n "$SMOKE" ] && echo "- smoke: \`$SMOKE\`"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  # ── github-pages publish (separate job: needs the pages environment + perms) ──
+  deploy-pages:
+    name: Deploy · GitHub Pages
+    if: inputs.deploy && inputs.deploy_target == 'github-pages'
+    needs: build-test
+    runs-on: ${{ inputs.runs_on }}
+    timeout-minutes: 15
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - name: Publish to GitHub Pages
+        id: deploy
+        uses: actions/deploy-pages@v4
+
+      - name: Smoke check
+        if: inputs.smoke_url != ''
+        env:
+          URL: ${{ inputs.smoke_url }}
+          EXPECT: ${{ inputs.smoke_expect_code }}
+          RETRIES: ${{ inputs.smoke_retries }}
+          DELAY: ${{ inputs.smoke_delay }}
+        run: |
+          set -uo pipefail
+          code="000"
+          for i in $(seq 1 "$RETRIES"); do
+            code=$(curl -sS -o /dev/null -m 25 -w '%{http_code}' "$URL" || echo "000")
+            echo "smoke attempt $i/$RETRIES: HTTP $code"
+            [ "$code" = "$EXPECT" ] && { echo "smoke ok"; break; }
+            sleep "$DELAY"
+          done
+          [ "$code" = "$EXPECT" ] || { echo "::error::smoke failed: $URL -> $code (expected $EXPECT)"; exit 1; }
