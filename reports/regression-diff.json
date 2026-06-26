@@ -1,124 +1,21 @@
 {
-  "capturedAt": "2026-06-26T01-47-28-268Z",
+  "capturedAt": "2026-06-26T02-49-43-909Z",
   "requirement": "R3: zero unintended diffs vs baseline",
   "hasBaseline": true,
-  "intendedDiffs": [
-    {
-      "id": "code-simple-edit",
-      "type": "intended-prompt-hardening",
-      "reason": "local output adds §0 execution parameters while preserving indexed requirements, constraints, SDLC phases, and validation",
-      "baselineHash": "01f1b98509128a6a",
-      "currentHash": "41b84fd1385c3f1c"
-    },
-    {
-      "id": "code-multi-file",
-      "type": "intended-prompt-hardening",
-      "reason": "local output adds §0 execution parameters while preserving indexed requirements, constraints, SDLC phases, and validation",
-      "baselineHash": "8d763754d04baf39",
-      "currentHash": "2869bfd2b2d518e6"
-    },
-    {
-      "id": "code-debug",
-      "type": "intended-prompt-hardening",
-      "reason": "local output adds §0 execution parameters while preserving indexed requirements, constraints, SDLC phases, and validation",
-      "baselineHash": "19eb441614cf0e90",
-      "currentHash": "350948dd2a3bc0d7"
-    },
-    {
-      "id": "code-ui",
-      "type": "intended-prompt-hardening",
-      "reason": "local output adds §0 execution parameters while preserving indexed requirements, constraints, SDLC phases, and validation",
-      "baselineHash": "f3de3b315ad02855",
-      "currentHash": "c8576e5ee54a7485"
-    },
-    {
-      "id": "code-deploy",
-      "type": "intended-prompt-hardening",
-      "reason": "local output adds §0 execution parameters while preserving indexed requirements, constraints, SDLC phases, and validation",
-      "baselineHash": "bf5ff11fb6f1d6f9",
-      "currentHash": "fc9601907c175415"
-    },
-    {
-      "id": "write-summary",
-      "type": "intended-prompt-hardening",
-      "reason": "local output adds §0 execution parameters while preserving indexed requirements, constraints, SDLC phases, and validation",
-      "baselineHash": "d7b412afb933bf4c",
-      "currentHash": "3fbccb298547b828"
-    },
-    {
-      "id": "analysis-compare",
-      "type": "intended-prompt-hardening",
-      "reason": "local output adds §0 execution parameters while preserving indexed requirements, constraints, SDLC phases, and validation",
-      "baselineHash": "9fd824727500e94c",
-      "currentHash": "6e2961c6a2d9efa6"
-    },
-    {
-      "id": "transform-data",
-      "type": "intended-prompt-hardening",
-      "reason": "local output adds §0 execution parameters while preserving indexed requirements, constraints, SDLC phases, and validation",
-      "baselineHash": "6d3b5ba2127b8d2c",
-      "currentHash": "308a07319c5abe0a"
-    }
-  ],
+  "intendedDiffs": [],
   "unintendedDiffs": [],
-  "allDiffs": [
-    {
-      "id": "code-simple-edit",
-      "type": "intended-prompt-hardening",
-      "reason": "local output adds §0 execution parameters while preserving indexed requirements, constraints, SDLC phases, and validation",
-      "baselineHash": "01f1b98509128a6a",
-      "currentHash": "41b84fd1385c3f1c"
-    },
-    {
-      "id": "code-multi-file",
-      "type": "intended-prompt-hardening",
-      "reason": "local output adds §0 execution parameters while preserving indexed requirements, constraints, SDLC phases, and validation",
-      "baselineHash": "8d763754d04baf39",
-      "currentHash": "2869bfd2b2d518e6"
-    },
-    {
-      "id": "code-debug",
-      "type": "intended-prompt-hardening",
-      "reason": "local output adds §0 execution parameters while preserving indexed requirements, constraints, SDLC phases, and validation",
-      "baselineHash": "19eb441614cf0e90",
-      "currentHash": "350948dd2a3bc0d7"
-    },
-    {
-      "id": "code-ui",
-      "type": "intended-prompt-hardening",
-      "reason": "local output adds §0 execution parameters while preserving indexed requirements, constraints, SDLC phases, and validation",
-      "baselineHash": "f3de3b315ad02855",
-      "currentHash": "c8576e5ee54a7485"
-    },
-    {
-      "id": "code-deploy",
-      "type": "intended-prompt-hardening",
-      "reason": "local output adds §0 execution parameters while preserving indexed requirements, constraints, SDLC phases, and validation",
-      "baselineHash": "bf5ff11fb6f1d6f9",
-      "currentHash": "fc9601907c175415"
-    },
-    {
-      "id": "write-summary",
-      "type": "intended-prompt-hardening",
-      "reason": "local output adds §0 execution parameters while preserving indexed requirements, constraints, SDLC phases, and validation",
-      "baselineHash": "d7b412afb933bf4c",
-      "currentHash": "3fbccb298547b828"
-    },
-    {
-      "id": "analysis-compare",
-      "type": "intended-prompt-hardening",
-      "reason": "local output adds §0 execution parameters while preserving indexed requirements, constraints, SDLC phases, and validation",
-      "baselineHash": "9fd824727500e94c",
-      "currentHash": "6e2961c6a2d9efa6"
-    },
-    {
-      "id": "transform-data",
-      "type": "intended-prompt-hardening",
-      "reason": "local output adds §0 execution parameters while preserving indexed requirements, constraints, SDLC phases, and validation",
-      "baselineHash": "6d3b5ba2127b8d2c",
-      "currentHash": "308a07319c5abe0a"
-    }
-  ],
+  "allDiffs": [],
+  "deterministicOk": true,
+  "browserSurface": {
+    "ok": true,
+    "status": "verified",
+    "evidence": "reports/browser-evidence/summary.json",
+    "cdpResponding": true,
+    "copyControlsPresent": "verified-by-browser-evidence",
+    "attachmentFlow": "verified-by-browser-evidence",
+    "consoleNetwork": "verified-by-browser-evidence",
+    "screenshots": "verified-by-browser-evidence"
+  },
   "ok": true,
   "publicAssets": [
     "backend.json",
@@ -127,6 +24,5 @@
     "og.png"
   ],
   "attachmentFreeHash": "314599c514da7fc2",
-  "copyControlsPresent": true,
-  "backendProbeBehavior": "deterministic-fallback when no recon-api-base"
+  "backendProbeBehavior": "verified-by-browser-evidence"
 }

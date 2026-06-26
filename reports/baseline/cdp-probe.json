@@ -1,6 +1,30 @@
 {
-  "capturedAt": "2026-06-26T01-48-22-528Z",
-  "endpoint": "http://localhost:9222/json",
+  "capturedAt": "2026-06-26T02-15-11-218Z",
   "ok": false,
-  "error": "AggregateError"
+  "endpoint": "http://localhost:9222/json",
+  "port": null,
+  "targetCount": 0,
+  "targets": [],
+  "candidates": [
+    9222,
+    44732
+  ],
+  "probes": [
+    {
+      "port": 9222,
+      "endpoint": "http://127.0.0.1:9222/json",
+      "responding": false,
+      "status": null,
+      "error": "connect ECONNREFUSED 127.0.0.1:9222",
+      "targetCount": 0
+    },
+    {
+      "port": 44732,
+      "endpoint": "http://127.0.0.1:44732/json",
+      "responding": false,
+      "status": null,
+      "error": "timeout",
+      "targetCount": 0
+    }
+  ]
 }

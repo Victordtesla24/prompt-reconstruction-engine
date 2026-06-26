@@ -20,3 +20,5 @@ Thumbs.db
 # Transient task-runner / agent state
 .juno_task/
 .env
+.claude/
+.cursor/

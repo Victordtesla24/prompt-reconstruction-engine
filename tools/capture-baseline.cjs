@@ -5,6 +5,7 @@ const https = require('https');
 const vm = require('vm');
 const corpus = require('./eval-corpus.cjs');
 const { writeJson, writeText, timestamp } = require('./lib/report-io.cjs');
+const { probeCdp } = require('./lib/cdp-probe.cjs');
 
 function fetchUrl(url) {
   return new Promise((resolve, reject) => {
@@ -29,23 +30,6 @@ async function loadProductionEngine(pageBody) {
   const api = sandbox.module.exports && Object.keys(sandbox.module.exports).length ? sandbox.module.exports : sandbox.window.PRE;
   if (!api || typeof api.reconstruct !== 'function') throw new Error('production engine did not expose PRE API');
   return { api, scriptUrl };
-}
-
-async function probeCdp() {
-  const http = require('http');
-  return new Promise((resolve) => {
-    const req = http.get('http://localhost:9222/json', { timeout: 3000 }, (res) => {
-      let body = '';
-      res.on('data', (c) => { body += c; });
-      res.on('end', () => {
-        let targets = [];
-        try { targets = JSON.parse(body); } catch (_) { /* keep empty */ }
-        resolve({ ok: res.statusCode === 200, status: res.statusCode, targetCount: Array.isArray(targets) ? targets.length : 0, raw: body.slice(0, 4000) });
-      });
-    });
-    req.on('error', (e) => resolve({ ok: false, error: String(e.message || e) }));
-    req.on('timeout', () => { req.destroy(); resolve({ ok: false, error: 'timeout' }); });
-  });
 }
 
 async function main() {
@@ -84,7 +68,7 @@ async function main() {
   writeJson('baseline/deterministic-outputs.json', { capturedAt: ts, engine: engineMeta, items: deterministic });
 
   const cdp = await probeCdp();
-  writeJson('baseline/cdp-probe.json', { capturedAt: ts, endpoint: 'http://localhost:9222/json', ...cdp });
+  writeJson('baseline/cdp-probe.json', { capturedAt: ts, ...cdp });
 
   const summary = {
     capturedAt: ts,

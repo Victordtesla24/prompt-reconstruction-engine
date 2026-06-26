@@ -1,6 +1,4 @@
-<!DOCTYPE html>
-<html lang="en" data-theme="dark">
-<head>
+<html lang="en" data-theme="dark"><head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Prompt Reconstruction Engine — Max Execution Accuracy</title>
@@ -30,14 +28,14 @@
 
 <!-- Fonts: Playfair Display + DM Sans (Vikram's stack) -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&amp;family=DM+Sans:wght@300;400;500;600&amp;display=swap" rel="stylesheet">
 
 <!-- Three.js (deferred — non-render-blocking; used by initThree() on DOMContentLoaded) -->
-<script defer src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+<script defer="" src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
 
 <!-- Lucide (deferred — non-render-blocking) -->
-<script defer src="https://unpkg.com/lucide@1.21.0/dist/umd/lucide.js"></script>
+<script defer="" src="https://unpkg.com/lucide@1.21.0/dist/umd/lucide.js"></script>
 
 <!-- Live-AI backend: set content to your VPS reconstruct URL (e.g. https://<host>.<tailnet>.ts.net)
      to enable OpenRouter reconstruction. Empty = deterministic-only (fully functional, no backend). -->
@@ -46,7 +44,7 @@
 <!-- Reconstruction core (spec v2) — shared by frontend + VPS backend.
      ?v busts stale browser caches on engine updates; no-cache headers
      (firebase.json) keep index.html + assets fresh after every deploy. -->
-<script defer src="engine.core.js?v=2.4"></script>
+<script defer="" src="engine.core.js?v=2.4"></script>
 
 <style>
 /* ─── TOKENS ────────────────────────────────────────────────── */
@@ -440,12 +438,12 @@ body {
   border-radius: 999px;
   border: 1px solid var(--glass-border);
   background: rgba(201,168,76,0.06);
-  color: #9b988f; /* WCAG AA 5.54:1 on pill glass (was --text-muted #8a8780 = 4.46:1) */
+  color: var(--text-muted);
 }
 
 .status-pill[data-state="ok"] { color: var(--gold); border-color: rgba(201,168,76,0.35); }
 .status-pill[data-state="warn"] { color: #e8c468; }
-.status-pill[data-state="off"] { opacity: 0.92; }
+.status-pill[data-state="off"] { opacity: 0.85; }
 
 .status-dot {
   width: 6px; height: 6px;
@@ -981,7 +979,7 @@ body {
   transition: color 0.2s;
 }
 .attach-chip .chip-remove:hover { color: #e07070; }
-.attach-empty { font-size: 0.74rem; color: #a8a59b; padding: 0.3rem 0; } /* WCAG AA on glass panel (was --text-faint, measured sub-4.5 by Lighthouse) */
+.attach-empty { font-size: 0.74rem; color: var(--text-faint); padding: 0.3rem 0; }
 
 /* ─── RESPONSIVE ─────────────────────────────────────────────── */
 @media (max-width: 768px) {
@@ -1004,7 +1002,7 @@ body {
 </head>
 <body>
 
-<canvas id="bg-canvas" aria-hidden="true"></canvas>
+<canvas id="bg-canvas" aria-hidden="true" width="1440" height="813" style="width: 1440px; height: 813px;"></canvas>
 
 <div class="app">
 
@@ -1012,9 +1010,9 @@ body {
 <header class="header">
   <div class="logo">
     <svg class="logo-mark" viewBox="0 0 36 36" fill="none" aria-label="PRE logo">
-      <polygon points="18,2 34,28 2,28" stroke="#C9A84C" stroke-width="1.5" fill="none"/>
-      <polygon points="18,10 28,26 8,26" stroke="#C9A84C" stroke-width="0.8" fill="rgba(201,168,76,0.08)"/>
-      <circle cx="18" cy="18" r="2.5" fill="#C9A84C"/>
+      <polygon points="18,2 34,28 2,28" stroke="#C9A84C" stroke-width="1.5" fill="none"></polygon>
+      <polygon points="18,10 28,26 8,26" stroke="#C9A84C" stroke-width="0.8" fill="rgba(201,168,76,0.08)"></polygon>
+      <circle cx="18" cy="18" r="2.5" fill="#C9A84C"></circle>
     </svg>
     <div>
       <div class="logo-text">Prompt Reconstruction Engine</div>
@@ -1022,7 +1020,7 @@ body {
     </div>
   </div>
   <div class="header-badge">
-    <i data-lucide="zap" style="width:12px;height:12px;"></i>
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="zap" aria-hidden="true" style="width:12px;height:12px;" class="lucide lucide-zap"><path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"></path></svg>
     Spec v2 · SDLC-Mandated
   </div>
 </header>
@@ -1047,9 +1045,8 @@ body {
       <div class="meter-label">Primary · Target-tuned</div>
       <div class="meter-ring">
         <svg width="80" height="80" viewBox="0 0 80 80">
-          <circle cx="40" cy="40" r="33" stroke="rgba(201,168,76,0.12)" stroke-width="7" fill="none"/>
-          <circle cx="40" cy="40" r="33" stroke="#C9A84C" stroke-width="7" fill="none"
-            stroke-dasharray="207.3" stroke-dashoffset="207.3" stroke-linecap="round" id="ring1"/>
+          <circle cx="40" cy="40" r="33" stroke="rgba(201,168,76,0.12)" stroke-width="7" fill="none"></circle>
+          <circle cx="40" cy="40" r="33" stroke="#C9A84C" stroke-width="7" fill="none" stroke-dasharray="207.3" stroke-dashoffset="207.3" stroke-linecap="round" id="ring1" style="stroke-dashoffset: 207.3;"></circle>
         </svg>
         <div class="meter-pct" id="pct1">—</div>
       </div>
@@ -1059,9 +1056,8 @@ body {
       <div class="meter-label">Portable · Agnostic</div>
       <div class="meter-ring">
         <svg width="80" height="80" viewBox="0 0 80 80">
-          <circle cx="40" cy="40" r="33" stroke="rgba(201,168,76,0.12)" stroke-width="7" fill="none"/>
-          <circle cx="40" cy="40" r="33" stroke="#C9A84C" stroke-width="7" fill="none"
-            stroke-dasharray="207.3" stroke-dashoffset="207.3" stroke-linecap="round" id="ring2"/>
+          <circle cx="40" cy="40" r="33" stroke="rgba(201,168,76,0.12)" stroke-width="7" fill="none"></circle>
+          <circle cx="40" cy="40" r="33" stroke="#C9A84C" stroke-width="7" fill="none" stroke-dasharray="207.3" stroke-dashoffset="207.3" stroke-linecap="round" id="ring2" style="stroke-dashoffset: 207.3;"></circle>
         </svg>
         <div class="meter-pct" id="pct2">—</div>
       </div>
@@ -1071,9 +1067,8 @@ body {
       <div class="meter-label">Req. Coverage</div>
       <div class="meter-ring">
         <svg width="80" height="80" viewBox="0 0 80 80">
-          <circle cx="40" cy="40" r="33" stroke="rgba(201,168,76,0.12)" stroke-width="7" fill="none"/>
-          <circle cx="40" cy="40" r="33" stroke="#7ec97e" stroke-width="7" fill="none"
-            stroke-dasharray="207.3" stroke-dashoffset="207.3" stroke-linecap="round" id="ring3"/>
+          <circle cx="40" cy="40" r="33" stroke="rgba(201,168,76,0.12)" stroke-width="7" fill="none"></circle>
+          <circle cx="40" cy="40" r="33" stroke="#7ec97e" stroke-width="7" fill="none" stroke-dasharray="207.3" stroke-dashoffset="207.3" stroke-linecap="round" id="ring3" style="stroke-dashoffset: 0;"></circle>
         </svg>
         <div class="meter-pct" style="color:#7ec97e" id="pct3">100%</div>
       </div>
@@ -1083,9 +1078,8 @@ body {
       <div class="meter-label">Constraint Guard</div>
       <div class="meter-ring">
         <svg width="80" height="80" viewBox="0 0 80 80">
-          <circle cx="40" cy="40" r="33" stroke="rgba(201,168,76,0.12)" stroke-width="7" fill="none"/>
-          <circle cx="40" cy="40" r="33" stroke="#7ec97e" stroke-width="7" fill="none"
-            stroke-dasharray="207.3" stroke-dashoffset="207.3" stroke-linecap="round" id="ring4"/>
+          <circle cx="40" cy="40" r="33" stroke="rgba(201,168,76,0.12)" stroke-width="7" fill="none"></circle>
+          <circle cx="40" cy="40" r="33" stroke="#7ec97e" stroke-width="7" fill="none" stroke-dasharray="207.3" stroke-dashoffset="207.3" stroke-linecap="round" id="ring4" style="stroke-dashoffset: 0;"></circle>
         </svg>
         <div class="meter-pct" style="color:#7ec97e" id="pct4">100%</div>
       </div>
@@ -1096,7 +1090,7 @@ body {
   <!-- INPUT -->
   <section class="input-section">
     <div class="section-title">
-      <div class="icon-badge"><i data-lucide="terminal" style="width:14px;height:14px;"></i></div>
+      <div class="icon-badge"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="terminal" aria-hidden="true" style="width:14px;height:14px;" class="lucide lucide-terminal"><path d="M12 19h8"></path><path d="m4 17 6-6-6-6"></path></svg></div>
       Raw User Prompt Input
     </div>
     <div class="section-subtitle">
@@ -1109,36 +1103,36 @@ body {
 Example: Implement new animations for the cinematic-uiux-vfx-engineer agent. Test and debug them. You manage delegation and QA. ralphy is in another terminal — don't collide."></textarea>
 
     <div class="input-meta">
-      <span class="char-count" id="charCount">0 characters</span>
+      <span class="char-count" id="charCount">1748 characters</span>
       <span>Optimised for Claude Opus 4.8, DeepSeek V4 Pro &amp; the OpenRouter open-source frontier</span>
     </div>
 
     <!-- ATTACH CONTEXT (R1–R8) -->
     <div class="attach-block">
       <div class="attach-head">
-        <i data-lucide="paperclip" style="width:14px;height:14px;color:#C9A84C;"></i>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="paperclip" aria-hidden="true" style="width:14px;height:14px;color:#C9A84C;" class="lucide lucide-paperclip"><path d="m16 6-8.414 8.586a2 2 0 0 0 2.829 2.829l8.414-8.586a4 4 0 1 0-5.657-5.657l-8.379 8.551a6 6 0 1 0 8.485 8.485l8.379-8.551"></path></svg>
         <span class="attach-title">Attach Context <em>· optional</em></span>
         <span class="attach-hint">Local files, photos &amp; media, GitHub repositories, website links and terminal command outputs. The engine folds them into the reconstructed prompt as target deliverables, debugging/defect-resolution references and a derived TO-DO list — treated strictly as DATA, never instructions.</span>
       </div>
       <div class="attach-controls">
         <label class="attach-btn">
-          <i data-lucide="file-up" style="width:13px;height:13px;"></i> Files / Photos / Media
-          <input type="file" id="fileInput" multiple style="display:none;" onchange="handleFileInput(event)">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="file-up" aria-hidden="true" style="width:13px;height:13px;" class="lucide lucide-file-up"><path d="M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z"></path><path d="M14 2v5a1 1 0 0 0 1 1h5"></path><path d="M12 12v6"></path><path d="m15 15-3-3-3 3"></path></svg> Files / Photos / Media
+          <input type="file" id="fileInput" multiple="" style="display:none;" onchange="handleFileInput(event)">
         </label>
         <div class="attach-inline">
           <input class="config-input" id="ghInput" placeholder="github.com/owner/repo" onkeydown="if(event.key==='Enter'){event.preventDefault();addGithub();}">
-          <button type="button" class="attach-add" onclick="addGithub()"><i data-lucide="git-branch" style="width:13px;height:13px;"></i> Add repo</button>
+          <button type="button" class="attach-add" onclick="addGithub()"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="git-branch" aria-hidden="true" style="width:13px;height:13px;" class="lucide lucide-git-branch"><path d="M15 6a9 9 0 0 0-9 9V3"></path><circle cx="18" cy="6" r="3"></circle><circle cx="6" cy="18" r="3"></circle></svg> Add repo</button>
         </div>
         <div class="attach-inline">
           <input class="config-input" id="urlInput" placeholder="https://site.com/page" onkeydown="if(event.key==='Enter'){event.preventDefault();addWebsite();}">
-          <button type="button" class="attach-add" onclick="addWebsite()"><i data-lucide="link" style="width:13px;height:13px;"></i> Add link</button>
+          <button type="button" class="attach-add" onclick="addWebsite()"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="link" aria-hidden="true" style="width:13px;height:13px;" class="lucide lucide-link"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg> Add link</button>
         </div>
         <div class="attach-inline" style="flex-basis:100%;align-items:flex-start;">
           <textarea class="config-input" id="termInput" rows="2" placeholder="Paste terminal command output (build logs, stack traces, test failures)…"></textarea>
-          <button type="button" class="attach-add" onclick="addTerminal()"><i data-lucide="terminal-square" style="width:13px;height:13px;"></i> Add output</button>
+          <button type="button" class="attach-add" onclick="addTerminal()"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="terminal-square" aria-hidden="true" style="width:13px;height:13px;" class="lucide lucide-terminal-square"><path d="m7 11 2-2-2-2"></path><path d="M11 13h4"></path><rect width="18" height="18" x="3" y="3" rx="2" ry="2"></rect></svg> Add output</button>
         </div>
       </div>
-      <div class="attach-list" id="attachList"></div>
+      <div class="attach-list" id="attachList"><div class="attach-empty">No context attached — the engine runs on the raw prompt alone.</div></div>
     </div>
 
     <!-- CONFIG -->
@@ -1176,19 +1170,19 @@ Example: Implement new animations for the cinematic-uiux-vfx-engineer agent. Tes
     </div>
 
     <div class="api-warning">
-      <i data-lucide="sparkles" style="width:14px;height:14px;color:#C9A84C;flex-shrink:0;margin-top:1px;"></i>
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="sparkles" aria-hidden="true" style="width:14px;height:14px;color:#C9A84C;flex-shrink:0;margin-top:1px;" class="lucide lucide-sparkles"><path d="M11.017 2.814a1 1 0 0 1 1.966 0l1.051 5.558a2 2 0 0 0 1.594 1.594l5.558 1.051a1 1 0 0 1 0 1.966l-5.558 1.051a2 2 0 0 0-1.594 1.594l-1.051 5.558a1 1 0 0 1-1.966 0l-1.051-5.558a2 2 0 0 0-1.594-1.594l-5.558-1.051a1 1 0 0 1 0-1.966l5.558-1.051a2 2 0 0 0 1.594-1.594z"></path><path d="M20 2v4"></path><path d="M22 4h-4"></path><circle cx="4" cy="20" r="2"></circle></svg>
       <div class="api-warning-copy">
-        <label id="aiToggleLabel" style="display:inline-flex;align-items:center;gap:8px;cursor:pointer;">
-          <input type="checkbox" id="aiToggle" style="accent-color:var(--gold);width:14px;height:14px;cursor:pointer;">
+        <label id="aiToggleLabel" style="display: inline-flex; align-items: center; gap: 8px; cursor: not-allowed; opacity: 0.55;" title="Live AI requires the optional self-hosted backend">
+          <input type="checkbox" id="aiToggle" style="accent-color:var(--gold);width:14px;height:14px;cursor:pointer;" disabled="" aria-disabled="true">
           <strong style="color:var(--gold);">Live AI reconstruction</strong>
         </label>
         — when enabled, a current open-source model on OpenRouter
         (<code style="color:var(--gold);background:rgba(201,168,76,0.1);padding:0 4px;border-radius:3px;">z-ai/glm-5.2</code> → <code style="color:var(--gold);background:rgba(201,168,76,0.1);padding:0 4px;border-radius:3px;">deepseek/deepseek-v4-pro</code>)
         performs the reconstruction through the secure backend. Off by default; the deterministic built-in engine runs instantly and is always the fallback.
-        <span id="aiAvailNote" style="display:block;margin-top:6px;font-size:0.74rem;color:#a8a59b;"></span>
+        <span id="aiAvailNote" style="display: block; margin-top: 6px; font-size: 0.74rem; color: var(--text-faint); cursor: default; text-decoration: none;">Checking Live AI backend… (retry 1 of 2)</span>
         <div class="status-rail" id="statusRail" aria-label="Engine status">
           <span class="status-pill" id="statusEngine" data-state="ok"><span class="status-dot"></span>Engine ready</span>
-          <span class="status-pill" id="statusBackend" data-state="off"><span class="status-dot"></span>Backend probing</span>
+          <span class="status-pill" id="statusBackend" data-state="off"><span class="status-dot"></span>Backend offline</span>
           <span class="status-pill" id="statusMode" data-state="ok"><span class="status-dot"></span>Deterministic</span>
         </div>
       </div>
@@ -1196,7 +1190,7 @@ Example: Implement new animations for the cinematic-uiux-vfx-engineer agent. Tes
 
     <button class="run-btn" id="runBtn" onclick="runReconstruction()">
       <div class="spinner" id="spinner"></div>
-      <i data-lucide="cpu" style="width:18px;height:18px;" id="runIcon"></i>
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="cpu" aria-hidden="true" style="width:18px;height:18px;" id="runIcon" class="lucide lucide-cpu"><path d="M12 20v2"></path><path d="M12 2v2"></path><path d="M17 20v2"></path><path d="M17 2v2"></path><path d="M2 12h2"></path><path d="M2 17h2"></path><path d="M2 7h2"></path><path d="M20 12h2"></path><path d="M20 17h2"></path><path d="M20 7h2"></path><path d="M7 20v2"></path><path d="M7 2v2"></path><rect x="4" y="4" width="16" height="16" rx="2"></rect><rect x="8" y="8" width="8" height="8" rx="1"></rect></svg>
       <span id="runLabel">Generate Reconstructed Prompts</span>
     </button>
   </section>
@@ -1207,7 +1201,7 @@ Example: Implement new animations for the cinematic-uiux-vfx-engineer agent. Tes
     <!-- Accuracy breakdown chart -->
     <div class="accuracy-chart-section">
       <div class="section-title">
-        <div class="icon-badge"><i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i></div>
+        <div class="icon-badge"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="bar-chart-2" aria-hidden="true" style="width:14px;height:14px;" class="lucide lucide-bar-chart-2"><path d="M5 21v-6"></path><path d="M12 21V3"></path><path d="M19 21V9"></path></svg></div>
         Execution Accuracy Breakdown
       </div>
       <div class="section-subtitle">Scores across the 5 evaluation dimensions (20 pts each)</div>
@@ -1224,7 +1218,7 @@ Example: Implement new animations for the cinematic-uiux-vfx-engineer agent. Tes
     <!-- Diff table -->
     <div class="diff-section">
       <div class="section-title">
-        <div class="icon-badge"><i data-lucide="diff" style="width:14px;height:14px;"></i></div>
+        <div class="icon-badge"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="diff" aria-hidden="true" style="width:14px;height:14px;" class="lucide lucide-diff"><path d="M12 3v14"></path><path d="M5 10h14"></path><path d="M5 21h14"></path></svg></div>
         Raw vs Reconstructed — Issue Map
       </div>
       <div class="section-subtitle">Every flaw in the raw prompt and how each reconstruction resolves it</div>
@@ -1239,8 +1233,8 @@ Example: Implement new animations for the cinematic-uiux-vfx-engineer agent. Tes
 
 <!-- FOOTER -->
 <footer class="footer">
-  <span>Developed by Vik</span>
-  <span>Customer support &amp; new business enquiries: <a href="mailto:sarkar.vikram@gmail.com" style="color:var(--gold);text-decoration:underline;text-underline-offset:2px;">sarkar.vikram@gmail.com</a></span>
+  <span>Developed by Vik · <a href="mailto:sarkar.vikram@gmail.com" style="color:var(--gold);text-decoration:none;">sarkar.vikram@gmail.com</a></span>
+  <span>Customer support &amp; new business enquiries: <a href="mailto:sarkar.vikram@gmail.com" style="color:var(--gold);text-decoration:none;">sarkar.vikram@gmail.com</a></span>
 </footer>
 
 </div><!-- /app -->
@@ -1254,7 +1248,7 @@ Example: Implement new animations for the cinematic-uiux-vfx-engineer agent. Tes
 
 <!-- TOAST -->
 <div class="toast" id="toast">
-  <i data-lucide="check-circle" style="width:16px;height:16px;"></i>
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="check-circle" aria-hidden="true" style="width:16px;height:16px;" class="lucide lucide-check-circle"><path d="M21.801 10A10 10 0 1 1 17 3.335"></path><path d="m9 11 3 3L22 4"></path></svg>
   <span id="toastMsg">Copied!</span>
 </div>
 
@@ -1505,12 +1499,7 @@ function backendCandidates() {
       var meta = document.querySelector('meta[name="recon-api-base"]');
       var metaBase = ((meta && meta.content) || '').trim();
       if (metaBase) list.push(metaBase);
-      // Operator-local fallback: only probe http://localhost from a local/dev
-      // page. From a deployed https origin these are mixed-content (always
-      // blocked by the browser) and would only spam the console on every visit
-      // without any chance of succeeding.
-      var isRemoteHttps = location.protocol === 'https:' && !/^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname);
-      if (!isRemoteHttps) list.push('http://localhost:8791', 'http://127.0.0.1:8791');
+      list.push('http://localhost:8791', 'http://127.0.0.1:8791');
       var seen = {}, out = [];
       for (var i = 0; i < list.length; i++) {
         var u = String(list[i] || '').replace(/\/+$/, '');
@@ -1925,5 +1914,5 @@ window.addEventListener('DOMContentLoaded', () => {
   });
 });
 </script>
-</body>
-</html>
+
+</body></html>

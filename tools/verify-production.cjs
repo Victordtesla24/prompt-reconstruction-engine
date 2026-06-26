@@ -3,6 +3,7 @@
 /** Production smoke: fetch live site, verify engine markers, CDP probe. */
 const corpus = require('./eval-corpus.cjs');
 const { writeJson, timestamp } = require('./lib/report-io.cjs');
+const { probeCdp } = require('./lib/cdp-probe.cjs');
 
 async function fetch(url) {
   const lib = url.startsWith('https') ? require('https') : require('http');
@@ -12,17 +13,6 @@ async function fetch(url) {
       res.on('data', (c) => { body += c; });
       res.on('end', () => resolve({ status: res.statusCode, body }));
     }).on('error', reject);
-  });
-}
-
-async function probeCdp() {
-  const http = require('http');
-  return new Promise((resolve) => {
-    http.get('http://localhost:9222/json', { timeout: 3000 }, (res) => {
-      let body = '';
-      res.on('data', (c) => { body += c; });
-      res.on('end', () => resolve({ ok: res.statusCode === 200, status: res.statusCode }));
-    }).on('error', () => resolve({ ok: false }));
   });
 }
 
@@ -41,20 +31,23 @@ async function main() {
     hasStatusRail: /status-rail|statusEngine/.test(page.body)
   };
   const cdp = await probeCdp();
-  const allPass = Object.values(checks).every(Boolean);
+  const smokePass = Object.values(checks).every(Boolean);
+  const fullPass = smokePass && cdp.ok;
 
   const report = {
     capturedAt: ts,
     url,
     checks,
     cdp,
-    ok: allPass,
+    smokeOnlyOk: smokePass,
+    ok: fullPass,
     requirement: 'Production smoke + query-param compatibility'
   };
   writeJson('production-verify.json', report);
-  console.log('Production verify: ' + (allPass ? 'PASS' : 'FAIL'));
+  console.log('Production verify: ' + (fullPass ? 'PASS' : 'FAIL'));
   for (const [k, v] of Object.entries(checks)) console.log('  ' + k + ': ' + v);
-  if (!allPass) process.exit(1);
+  console.log('  cdp9222: ' + cdp.ok);
+  if (!fullPass) process.exit(1);
 }
 
 main().catch((e) => { console.error(e); process.exit(1); });

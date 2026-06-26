@@ -32,6 +32,23 @@ function publicAssetInventory() {
   return fs.readdirSync(pub).filter((f) => !f.startsWith('.')).sort();
 }
 
+function loadBrowserEvidence() {
+  const p = path.join(REPORTS, 'browser-evidence/summary.json');
+  if (!fs.existsSync(p)) return { ok: false, status: 'missing', evidence: 'reports/browser-evidence/summary.json' };
+  const evidence = readJson('browser-evidence/summary.json');
+  const cdpOk = !!(evidence.cdp && evidence.cdp.responding);
+  return {
+    ok: cdpOk,
+    status: cdpOk ? 'verified' : 'blocked',
+    evidence: 'reports/browser-evidence/summary.json',
+    cdpResponding: cdpOk,
+    copyControlsPresent: cdpOk ? 'verified-by-browser-evidence' : 'blocked-cdp-unavailable',
+    attachmentFlow: cdpOk ? 'verified-by-browser-evidence' : 'blocked-cdp-unavailable',
+    consoleNetwork: cdpOk ? 'verified-by-browser-evidence' : 'blocked-cdp-unavailable',
+    screenshots: cdpOk ? 'verified-by-browser-evidence' : 'blocked-cdp-unavailable'
+  };
+}
+
 function classifyPromptDiff(base, cur) {
   if (!base || !cur || base.prompt === cur.prompt) return null;
   const addedExecutionParams = !/§0 · EXECUTION PARAMETERS/.test(base.prompt) && /§0 · EXECUTION PARAMETERS/.test(cur.prompt);
@@ -82,6 +99,8 @@ function main() {
 
   const unintended = diffs.filter((d) => d.type === 'prompt-changed');
   const intended = diffs.filter((d) => d.type === 'intended-prompt-hardening');
+  const deterministicOk = unintended.length === 0 && !diffs.some((d) => d.type === 'no-baseline');
+  const browserSurface = loadBrowserEvidence();
 
   const report = {
     capturedAt: ts,
@@ -90,15 +109,16 @@ function main() {
     intendedDiffs: intended,
     unintendedDiffs: unintended,
     allDiffs: diffs,
-    ok: unintended.length === 0 && !diffs.some((d) => d.type === 'no-baseline'),
+    deterministicOk,
+    browserSurface,
+    ok: deterministicOk && browserSurface.ok,
     publicAssets: publicAssetInventory(),
     attachmentFreeHash,
-    copyControlsPresent: true,
-    backendProbeBehavior: 'deterministic-fallback when no recon-api-base'
+    backendProbeBehavior: browserSurface.ok ? 'verified-by-browser-evidence' : 'blocked-cdp-unavailable'
   };
 
   writeJson('regression-diff.json', report);
-  console.log('Regression: ' + (report.ok ? 'PASS' : 'FAIL') + ' (' + report.unintendedDiffs.length + ' unintended diffs, ' + report.intendedDiffs.length + ' intended diffs)');
+  console.log('Regression: ' + (report.ok ? 'PASS' : 'FAIL') + ' (' + report.unintendedDiffs.length + ' unintended diffs, ' + report.intendedDiffs.length + ' intended diffs, browser=' + browserSurface.status + ')');
   if (!report.ok) process.exit(1);
 }
 

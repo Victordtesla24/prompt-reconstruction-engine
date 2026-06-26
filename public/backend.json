@@ -1,5 +1,6 @@
 {
-  "url": "https://prompt-reconstruction-engine.loca.lt",
-  "note": "Live AI backend public endpoint (localtunnel, fixed subdomain \u2014 stable, holds long requests). Frontend reads .url at load and probes <url>/health.",
+  "url": "https://recon.srv1356245.hstgr.cloud",
+  "urls": ["https://recon.srv1356245.hstgr.cloud"],
+  "note": "Live AI backend on the owner's VPS — systemd reconstruct-server (Node) behind Traefik v3 + Let's Encrypt. Frontend reads .urls/.url at load and probes <url>/health.",
   "spec": "2.0.0"
 }

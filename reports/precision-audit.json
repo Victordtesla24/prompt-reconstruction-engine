@@ -1,5 +1,5 @@
 {
-  "capturedAt": "2026-06-26T01-47-26-681Z",
+  "capturedAt": "2026-06-26T02-38-57-573Z",
   "total": 40,
   "passed": 40,
   "failed": 0,
@@ -287,7 +287,7 @@
       "model": "generic",
       "ok": true,
       "issues": [],
-      "promptLength": 6996,
+      "promptLength": 6984,
       "validation": {
         "ok": true,
         "missing": []
@@ -298,7 +298,7 @@
       "model": "claude-opus-4-8",
       "ok": true,
       "issues": [],
-      "promptLength": 7314,
+      "promptLength": 7302,
       "validation": {
         "ok": true,
         "missing": []
@@ -309,7 +309,7 @@
       "model": "deepseek-v4-pro",
       "ok": true,
       "issues": [],
-      "promptLength": 7261,
+      "promptLength": 7249,
       "validation": {
         "ok": true,
         "missing": []
@@ -320,7 +320,7 @@
       "model": "glm-5-2",
       "ok": true,
       "issues": [],
-      "promptLength": 7006,
+      "promptLength": 6994,
       "validation": {
         "ok": true,
         "missing": []
@@ -331,7 +331,7 @@
       "model": "qwen3-coder-next",
       "ok": true,
       "issues": [],
-      "promptLength": 7014,
+      "promptLength": 7002,
       "validation": {
         "ok": true,
         "missing": []
@@ -342,7 +342,7 @@
       "model": "generic",
       "ok": true,
       "issues": [],
-      "promptLength": 7011,
+      "promptLength": 7025,
       "validation": {
         "ok": true,
         "missing": []
@@ -353,7 +353,7 @@
       "model": "claude-opus-4-8",
       "ok": true,
       "issues": [],
-      "promptLength": 7329,
+      "promptLength": 7343,
       "validation": {
         "ok": true,
         "missing": []
@@ -364,7 +364,7 @@
       "model": "deepseek-v4-pro",
       "ok": true,
       "issues": [],
-      "promptLength": 7276,
+      "promptLength": 7290,
       "validation": {
         "ok": true,
         "missing": []
@@ -375,7 +375,7 @@
       "model": "glm-5-2",
       "ok": true,
       "issues": [],
-      "promptLength": 7021,
+      "promptLength": 7035,
       "validation": {
         "ok": true,
         "missing": []
@@ -386,7 +386,7 @@
       "model": "qwen3-coder-next",
       "ok": true,
       "issues": [],
-      "promptLength": 7029,
+      "promptLength": 7043,
       "validation": {
         "ok": true,
         "missing": []

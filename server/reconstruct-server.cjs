@@ -143,8 +143,22 @@ async function reconstruct(raw, target, preferred, attachments) {
   if (preferred) chain.push(preferred);
   for (const m of PRE.RECONSTRUCTOR_CHAIN) if (chain.indexOf(m) < 0) chain.push(m);
   const errors = [];
+  // Total wall-clock budget so the backend ALWAYS answers inside the frontend's
+  // 60s client timeout. Without it, a chain where each model fails the gate
+  // (each up to 90s) runs for minutes — the browser aborts at 60s and the
+  // visitor sees a stall instead of the guaranteed deterministic fallback.
+  // Stop starting a new model once too little budget remains, and cap each
+  // attempt to what's left; the deterministic fallback then ships instantly.
+  const MIN_ATTEMPT_MS = 18 * 1000;
+  const deadline = Date.now() + parseInt(process.env.RECON_TOTAL_BUDGET_MS || '50000', 10);
   for (const model of chain) {
-    const out = await callOpenRouter(model, system, user);
+    const remaining = deadline - Date.now();
+    if (remaining < MIN_ATTEMPT_MS) {
+      errors.push(model + ': skipped (time budget exhausted)');
+      console.warn('[reconstruct] ' + model + ' -> skipped (' + remaining + 'ms budget left)');
+      break;
+    }
+    const out = await callOpenRouter(model, system, user, { timeoutMs: Math.min(90 * 1000, remaining) });
     if (!out.ok) {
       errors.push(model + ': ' + out.error);
       console.warn('[reconstruct] ' + model + ' failed -> ' + out.error);

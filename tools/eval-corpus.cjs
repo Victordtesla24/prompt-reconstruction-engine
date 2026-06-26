@@ -9,9 +9,9 @@ module.exports = {
     { id: 'code-deploy', raw: '1. Add a GitHub Actions workflow that runs npm test and deploys to Firebase Hosting on main.\n2. Fail the job if lint or tests fail.\n- Must not commit secrets to the repo.' }
   ],
   nonCoding: [
-    { id: 'write-summary', raw: '1. Summarize the attached incident report into executive bullets.\n2. Include root cause, impact, and remediation.\n- Must not speculate beyond the evidence.' },
-    { id: 'analysis-compare', raw: '1. Compare three vendor proposals on cost, risk, and time-to-value.\n2. Recommend one option with explicit trade-offs.\n- Never use vague language like "probably better".' },
-    { id: 'transform-data', raw: '1. Convert the CSV export into a normalized JSON schema.\n2. Validate every row and list invalid records separately.\n- Must not drop rows silently.' }
+    { id: 'write-summary', raw: 'Incident report: checkout latency rose from 220ms to 4.8s between 09:10 and 09:42 UTC after cache nodes in us-east were evicted by a misconfigured deploy. 18% of checkout attempts timed out; no payment data was lost. Remediation completed: rolled back cache config, warmed cache, added deploy guard.\n1. Summarize the incident report into executive bullets.\n2. Include root cause, impact, and remediation.\n- Must not speculate beyond the evidence.' },
+    { id: 'analysis-compare', raw: 'Vendor proposals: Alpha costs $42k/year, ships in 4 weeks, low integration risk, limited analytics. Beta costs $30k/year, ships in 10 weeks, medium integration risk, strong analytics. Gamma costs $55k/year, ships in 6 weeks, high integration risk, best compliance package.\n1. Compare the three vendor proposals on cost, risk, and time-to-value.\n2. Recommend one option with explicit trade-offs.\n- Never use vague language like "probably better".' },
+    { id: 'transform-data', raw: 'CSV export:\nid,email,total\n1,ada@example.com,42.50\n2,,18.00\n3,lin@example.com,not-a-number\n1,duplicate@example.com,20.00\n1. Convert the CSV export into a normalized JSON schema.\n2. Validate every row and list invalid records separately.\n- Must not drop rows silently.' }
   ],
   browser: {
     productionUrl: 'https://prompt-reconstruction-engine.web.app/?final=1782434252',
