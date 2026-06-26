@@ -2,27 +2,12 @@
   "ok": true,
   "endpoint": "http://127.0.0.1:9222/json",
   "port": 9222,
-  "targetCount": 4,
+  "targetCount": 1,
   "targets": [
-    {
-      "title": "Omnibox Popup",
-      "url": "chrome://omnibox-popup.top-chrome/",
-      "type": "browser_ui"
-    },
-    {
-      "title": "Omnibox Popup",
-      "url": "chrome://omnibox-popup.top-chrome/omnibox_popup_aim.html",
-      "type": "browser_ui"
-    },
     {
       "title": "Prompt Reconstruction Engine — Max Execution Accuracy",
       "url": "https://prompt-reconstruction-engine.web.app/?final=1782434252",
       "type": "page"
-    },
-    {
-      "title": "Service Worker chrome-extension://ghbmnnjooekpmoecnnnilnnbdlolhkhi/service_worker_bin_prod.js",
-      "url": "chrome-extension://ghbmnnjooekpmoecnnnilnnbdlolhkhi/service_worker_bin_prod.js",
-      "type": "service_worker"
     }
   ],
   "candidates": [
@@ -45,27 +30,12 @@
       "responding": true,
       "status": 200,
       "error": null,
-      "targetCount": 4,
+      "targetCount": 1,
       "targets": [
-        {
-          "title": "Omnibox Popup",
-          "url": "chrome://omnibox-popup.top-chrome/",
-          "type": "browser_ui"
-        },
-        {
-          "title": "Omnibox Popup",
-          "url": "chrome://omnibox-popup.top-chrome/omnibox_popup_aim.html",
-          "type": "browser_ui"
-        },
         {
           "title": "Prompt Reconstruction Engine — Max Execution Accuracy",
           "url": "https://prompt-reconstruction-engine.web.app/?final=1782434252",
           "type": "page"
-        },
-        {
-          "title": "Service Worker chrome-extension://ghbmnnjooekpmoecnnnilnnbdlolhkhi/service_worker_bin_prod.js",
-          "url": "chrome-extension://ghbmnnjooekpmoecnnnilnnbdlolhkhi/service_worker_bin_prod.js",
-          "type": "service_worker"
         }
       ]
     }

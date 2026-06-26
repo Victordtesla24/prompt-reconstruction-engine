@@ -99,7 +99,7 @@ body {
   opacity: 0.55;
 }
 
-/* ─── LAYOUT ───────────────────────────────────���────────────── */
+/* ─── LAYOUT ────────────────────────────────────────────────── */
 .app { position: relative; z-index: 1; }
 
 .header {
@@ -165,7 +165,7 @@ body {
   padding: clamp(2rem, 4vw, 4rem) clamp(1rem, 5vw, 3rem);
 }
 
-/* ��── HERO ──────────────────────────────────────────────────── */
+/* ─── HERO ──────────────────────────────────────────────────── */
 .hero {
   text-align: center;
   margin-bottom: clamp(2.5rem, 5vw, 5rem);
@@ -280,7 +280,7 @@ body {
   color: var(--text);
 }
 
-/* ─── INPUT SECTION ─────────────────────────────────────────── */
+/* ─── INPUT SECTION ──────────────────────��──────────────────── */
 .input-section {
   background: var(--glass-bg);
   border: 1px solid var(--glass-border);
@@ -440,12 +440,12 @@ body {
   border-radius: 999px;
   border: 1px solid var(--glass-border);
   background: rgba(201,168,76,0.06);
-  color: var(--text-muted);
+  color: #9b988f; /* WCAG AA 5.54:1 on pill glass (was --text-muted #8a8780 = 4.46:1) */
 }
 
 .status-pill[data-state="ok"] { color: var(--gold); border-color: rgba(201,168,76,0.35); }
 .status-pill[data-state="warn"] { color: #e8c468; }
-.status-pill[data-state="off"] { opacity: 0.85; }
+.status-pill[data-state="off"] { opacity: 0.92; }
 
 .status-dot {
   width: 6px; height: 6px;
@@ -454,7 +454,7 @@ body {
   box-shadow: 0 0 8px currentColor;
 }
 
-/* ─── RUN BUTTON ��───────────────────────────────────────────── */
+/* ─── RUN BUTTON ────────────────────────────────────────────── */
 .run-btn {
   display: flex;
   align-items: center;
@@ -841,7 +841,7 @@ body {
   color: var(--text-faint);
 }
 
-/* ─── TOAST ──────────────────────────────────────────────────── */
+/* ──��� TOAST ──────────────────────────────────────────────────── */
 .toast {
   position: fixed;
   bottom: 2rem; right: 2rem;
@@ -981,7 +981,7 @@ body {
   transition: color 0.2s;
 }
 .attach-chip .chip-remove:hover { color: #e07070; }
-.attach-empty { font-size: 0.74rem; color: var(--text-faint); padding: 0.3rem 0; }
+.attach-empty { font-size: 0.74rem; color: #a8a59b; padding: 0.3rem 0; } /* WCAG AA on glass panel (was --text-faint, measured sub-4.5 by Lighthouse) */
 
 /* ─── RESPONSIVE ─────────────────────────────────────────────── */
 @media (max-width: 768px) {
@@ -1185,7 +1185,7 @@ Example: Implement new animations for the cinematic-uiux-vfx-engineer agent. Tes
         — when enabled, a current open-source model on OpenRouter
         (<code style="color:var(--gold);background:rgba(201,168,76,0.1);padding:0 4px;border-radius:3px;">z-ai/glm-5.2</code> → <code style="color:var(--gold);background:rgba(201,168,76,0.1);padding:0 4px;border-radius:3px;">deepseek/deepseek-v4-pro</code>)
         performs the reconstruction through the secure backend. Off by default; the deterministic built-in engine runs instantly and is always the fallback.
-        <span id="aiAvailNote" style="display:block;margin-top:6px;font-size:0.74rem;color:var(--text-faint);"></span>
+        <span id="aiAvailNote" style="display:block;margin-top:6px;font-size:0.74rem;color:#a8a59b;"></span>
         <div class="status-rail" id="statusRail" aria-label="Engine status">
           <span class="status-pill" id="statusEngine" data-state="ok"><span class="status-dot"></span>Engine ready</span>
           <span class="status-pill" id="statusBackend" data-state="off"><span class="status-dot"></span>Backend probing</span>
@@ -1239,8 +1239,8 @@ Example: Implement new animations for the cinematic-uiux-vfx-engineer agent. Tes
 
 <!-- FOOTER -->
 <footer class="footer">
-  <span>Developed by Vik · <a href="mailto:sarkar.vikram@gmail.com" style="color:var(--gold);text-decoration:none;">sarkar.vikram@gmail.com</a></span>
-  <span>Customer support &amp; new business enquiries: <a href="mailto:sarkar.vikram@gmail.com" style="color:var(--gold);text-decoration:none;">sarkar.vikram@gmail.com</a></span>
+  <span>Developed by Vik</span>
+  <span>Customer support &amp; new business enquiries: <a href="mailto:sarkar.vikram@gmail.com" style="color:var(--gold);text-decoration:underline;text-underline-offset:2px;">sarkar.vikram@gmail.com</a></span>
 </footer>
 
 </div><!-- /app -->
@@ -1259,7 +1259,7 @@ Example: Implement new animations for the cinematic-uiux-vfx-engineer agent. Tes
 </div>
 
 <script>
-// ──��� THREE.JS BACKGROUND ─────────────────────────────────────
+// ─── THREE.JS BACKGROUND ─────────────────────────────────────
 // Defined here, invoked from DOMContentLoaded so deferred three.js is loaded first.
 function initThree() {
   const canvas = document.getElementById('bg-canvas');
@@ -1451,7 +1451,7 @@ window.RECON_API_BASE = window.RECON_API_BASE || (function () {
   return ((m && m.content) || '').trim();
 })();
 
-// ─── LIVE-AI BACKEND AVAILABILITY ─────────────────────────────
+// ─── LIVE-AI BACKEND AVAILABILITY ────────────────────���────────
 // Probe the optional backend on load so the Live-AI toggle reflects reality:
 // reachable ⇒ enabled; absent/unreachable ⇒ cleanly disabled with a clear note
 // (no scary "unavailable" error). The deterministic engine is always functional,
@@ -1505,7 +1505,12 @@ function backendCandidates() {
       var meta = document.querySelector('meta[name="recon-api-base"]');
       var metaBase = ((meta && meta.content) || '').trim();
       if (metaBase) list.push(metaBase);
-      list.push('http://localhost:8791', 'http://127.0.0.1:8791');
+      // Operator-local fallback: only probe http://localhost from a local/dev
+      // page. From a deployed https origin these are mixed-content (always
+      // blocked by the browser) and would only spam the console on every visit
+      // without any chance of succeeding.
+      var isRemoteHttps = location.protocol === 'https:' && !/^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname);
+      if (!isRemoteHttps) list.push('http://localhost:8791', 'http://127.0.0.1:8791');
       var seen = {}, out = [];
       for (var i = 0; i < list.length; i++) {
         var u = String(list[i] || '').replace(/\/+$/, '');

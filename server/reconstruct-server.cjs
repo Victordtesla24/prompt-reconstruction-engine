@@ -185,7 +185,11 @@ async function reconstruct(raw, target, preferred, attachments) {
 
 const server = http.createServer((req, res) => {
   cors(req, res);
-  const ip = (req.headers['x-forwarded-for'] || req.socket.remoteAddress || '').toString().split(',')[0].trim();
+  // The only ingress is a single trusted proxy hop (Traefik/Cloudflare -> 127.0.0.1),
+  // which appends the real client IP LAST. Taking the first entry would trust a
+  // client-spoofable X-Forwarded-For and let one source evade the per-IP limit.
+  const xff = (req.headers['x-forwarded-for'] || '').toString().split(',').map(function (s) { return s.trim(); }).filter(Boolean);
+  const ip = (xff.length ? xff[xff.length - 1] : (req.socket.remoteAddress || '')).toString();
   const today = new Date().toISOString().slice(0, 10);
 
   if (req.method === 'OPTIONS') { res.writeHead(204); return res.end(); }
@@ -223,9 +227,11 @@ const server = http.createServer((req, res) => {
         const target = PRE.MODELS[parsed.target] ? parsed.target : 'generic';
         const preferred = (parsed.reconstructor && PRE.RECONSTRUCTOR_CHAIN.indexOf(parsed.reconstructor) >= 0) ? parsed.reconstructor : null;
         const attachments = PRE.normalizeAttachments(parsed.attachments);
-        dailyCount++;
         const t0 = Date.now();
         const out = await reconstruct(raw, target, preferred, attachments);
+        // Only a real OpenRouter-backed result consumes the paid daily budget;
+        // the free deterministic fallback must never burn the cap (cheap-DoS guard).
+        if (!out.fallback) dailyCount++;
         console.log('[reconstruct] target=' + target + ' attachments=' + attachments.length + ' ok=' + out.ok + ' model=' + (out.model || '-') + ' ms=' + (Date.now() - t0) + ' ip=' + ip);
         if (res.headersSent) return res.end(JSON.stringify(out));
         return send(res, out.ok ? 200 : 502, out);
@@ -259,10 +265,10 @@ const server = http.createServer((req, res) => {
         const token = authToken || (parsed.token || '').toString();
         if (token !== RESEARCH_TOKEN) return send(res, 403, { ok: false, error: 'forbidden: invalid research token' });
         const brief = PRE.buildResearchInstruction({ siteUrl: parsed.siteUrl, repoUrl: parsed.repoUrl, models: parsed.models });
-        dailyCount++;
         const t0 = Date.now();
         // Deep research is long-running and reasoning-heavy: widen the budget.
         const out = await callOpenRouter(RESEARCH_MODEL, brief.system, brief.user, { maxTokens: 8000, timeoutMs: 280 * 1000, temperature: 0.2 });
+        if (out.ok) dailyCount++;   // count only real (paid) research spend
         console.log('[research] model=' + RESEARCH_MODEL + ' ok=' + out.ok + ' ms=' + (Date.now() - t0) + ' ip=' + ip);
         if (!out.ok) return send(res, 502, { ok: false, error: out.error, model: RESEARCH_MODEL });
         return send(res, 200, { ok: true, model: RESEARCH_MODEL, report: out.prompt, usage: out.usage, truncated: out.truncated });
