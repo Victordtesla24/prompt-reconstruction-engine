@@ -1,5 +1,5 @@
 {
-  "url": "https://prompt-reconstruction-engine.loca.lt",
-  "note": "Live AI backend public endpoint (localtunnel, fixed subdomain \u2014 stable, holds long requests). Frontend reads .url at load and probes <url>/health.",
+  "url": "https://undertow-ferret-guts.ngrok-free.dev",
+  "note": "Live AI backend public endpoint via ngrok (stable URL, reliable, holds long /reconstruct requests). Frontend reads .url/.urls[] at load and probes <url>/health.",
   "spec": "2.0.0"
 }
