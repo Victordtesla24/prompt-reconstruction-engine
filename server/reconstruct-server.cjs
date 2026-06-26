@@ -184,9 +184,14 @@ const server = http.createServer((req, res) => {
     req.on('data', (c) => { body += c; if (body.length > MAX_BODY) { tooBig = true; req.destroy(); } });
     req.on('end', async () => {
       if (tooBig) return;
-      // Flush headers early so reverse proxies (serveo/nginx) see activity
-      // during long OpenRouter reconstructions instead of timing out idle POSTs.
-      if (!res.headersSent) {
+      // Flush headers early so reverse proxies that honour it (nginx via
+      // X-Accel-Buffering) see activity during long OpenRouter reconstructions
+      // instead of timing out idle POSTs. Env-gated (default on): some tunnels
+      // (localtunnel) can't proxy an early-flushed chunked response and 408/502
+      // — set RECON_FLUSH_EARLY=0 there. Tunnels that hold the request natively
+      // (localtunnel, cloudflared) don't need it; serveo's ~6s cap isn't fixed
+      // by it either, so the normal send() path is the safer default per-tunnel.
+      if (process.env.RECON_FLUSH_EARLY !== '0' && !res.headersSent) {
         res.writeHead(200, {
           'Content-Type': 'application/json',
           'Transfer-Encoding': 'chunked',
