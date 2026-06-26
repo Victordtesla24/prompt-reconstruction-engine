@@ -1,11 +1,11 @@
 {
-  "capturedAt": "2026-06-26T01-47-26-973Z",
+  "capturedAt": "2026-06-26T01-48-22-528Z",
   "corpusSize": 8,
   "productionOk": true,
   "cdpOk": false,
   "engine": {
     "source": "production",
-    "scriptUrl": "https://prompt-reconstruction-engine.web.app/engine.core.js?v=2.3",
+    "scriptUrl": "https://prompt-reconstruction-engine.web.app/engine.core.js?v=2.4",
     "specVersion": "2.0.0"
   },
   "artifacts": [

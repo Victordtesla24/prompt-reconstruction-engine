@@ -1,5 +1,5 @@
 {
-  "capturedAt": "2026-06-26T01-39-39-364Z",
+  "capturedAt": "2026-06-26T01-48-21-633Z",
   "url": "https://prompt-reconstruction-engine.web.app/?final=1782434252",
   "checks": {
     "http200": true,
@@ -7,7 +7,9 @@
     "hasEngineScript": true,
     "hasRunBtn": true,
     "hasFinalQuery": true,
-    "hasGoldTokens": true
+    "hasGoldTokens": true,
+    "hasCacheBuster": true,
+    "hasStatusRail": true
   },
   "cdp": {
     "ok": false

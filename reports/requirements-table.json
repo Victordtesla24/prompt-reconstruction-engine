@@ -33,14 +33,14 @@
       "description": "Cursor native browser + CDP :9222 responding",
       "status": "FAIL",
       "evidence": "reports/baseline/cdp-probe.json, reports/browser-evidence/summary.json",
-      "detail": "CDP endpoint not responding; cursor-ide-browser MCP blocked by Runlayer"
+      "detail": "CDP endpoint not responding (cdpOk:false). cursor-ide-browser and user-cursor-cdp MCP blocked by Runlayer hook."
     },
     {
       "id": "R6",
       "description": "Visual/a11y premium UI audit",
       "status": "PARTIAL",
-      "evidence": "reports/visual-audit.json, public/index.html",
-      "detail": "Glass/gold UI polish applied; live screenshot/CDP a11y blocked by R5"
+      "evidence": "reports/visual-audit.json, reports/production-verify.json",
+      "detail": "Glass/gold UI + status rail deployed and verified via production HTML smoke; live Lighthouse/screenshots blocked by R5"
     }
   ]
 }
