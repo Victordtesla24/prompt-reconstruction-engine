@@ -197,7 +197,12 @@ jobs:
           if [ -n "${VPS_POST_CMD:-}" ]; then $SSH "$VPS_USER@$VPS_HOST" "$VPS_POST_CMD"; fi
           rm -f ~/.ssh/id_deploy
 
-      # ── github-pages: upload the artifact here; the deploy-pages job publishes it ──
+      # ── github-pages: configure (auto-enable) + upload; the deploy-pages job publishes ──
+      - name: Configure Pages
+        if: inputs.deploy && inputs.deploy_target == 'github-pages'
+        uses: actions/configure-pages@v5
+        with:
+          enablement: true
       - name: Upload Pages artifact
         if: inputs.deploy && inputs.deploy_target == 'github-pages'
         uses: actions/upload-pages-artifact@v3
