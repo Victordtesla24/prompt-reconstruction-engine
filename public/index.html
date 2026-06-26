@@ -1523,7 +1523,7 @@ function probeHealth(base) {
   return new Promise(function (resolve) {
     var ctrl = new AbortController();
     var timer = setTimeout(function () { ctrl.abort(); }, 8000);
-    fetch(base + '/health', { method: 'GET', signal: ctrl.signal })
+    fetch(base + '/health', { method: 'GET', headers: { 'ngrok-skip-browser-warning': 'true' }, signal: ctrl.signal })
       .then(function (r) { return r.ok ? r.json() : null; })
       .then(function (d) { clearTimeout(timer); resolve(d && d.ok ? { base: base, health: d } : null); })
       .catch(function () { clearTimeout(timer); resolve(null); });
@@ -1583,7 +1583,7 @@ async function reconstructViaAI(raw, model, attachments) {
   try {
     const res = await fetch(base + '/reconstruct', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'ngrok-skip-browser-warning': 'true' },
       body: JSON.stringify({ raw: raw, target: model, attachments: attachments || [] }),
       signal: ctrl.signal
     });
