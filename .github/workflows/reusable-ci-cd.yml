@@ -68,8 +68,9 @@ jobs:
     name: Build · Test · Deploy
     runs-on: ${{ inputs.runs_on }}
     timeout-minutes: 30
-    permissions:
-      contents: read
+    # Permissions are granted by the CALLER's job (capped there) — see presets in
+    # docs/CI-CD.md. Declaring them here would exceed a minimal caller's grant and
+    # fail validation (even for skipped jobs).
     defaults:
       run:
         working-directory: ${{ inputs.working_directory }}
@@ -243,9 +244,7 @@ jobs:
     needs: build-test
     runs-on: ${{ inputs.runs_on }}
     timeout-minutes: 15
-    permissions:
-      pages: write
-      id-token: write
+    # The github-pages caller must grant: contents: read, pages: write, id-token: write.
     environment:
       name: github-pages
       url: ${{ steps.deploy.outputs.page_url }}
