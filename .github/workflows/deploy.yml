@@ -20,9 +20,26 @@ jobs:
           python3 .github/workflows/check_js_syntax.py
 
       - name: Deploy to Firebase
-        uses: FirebaseExtended/action-hosting-deploy@v0
-        with:
-          repoToken: ${{ secrets.GITHUB_TOKEN }}
-          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
-          projectId: prompt-reconstruction-engine
-          channelId: live
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: |
+          npm install -g firebase-tools@latest
+          printf '%s' "$FIREBASE_SERVICE_ACCOUNT" > "$RUNNER_TEMP/sa.json"
+          export GOOGLE_APPLICATION_CREDENTIALS="$RUNNER_TEMP/sa.json"
+          set +e
+          for attempt in 1 2 3; do
+            OUT=$(firebase deploy --only hosting --project prompt-reconstruction-engine --non-interactive 2>&1)
+            CODE=$?
+            echo "$OUT"
+            if [ "$CODE" -eq 0 ]; then rm -f "$RUNNER_TEMP/sa.json"; echo "deploy ok"; exit 0; fi
+            # The old action would upload+release a version, then a transient network
+            # "premature close" retried the release and 400'd with "is the current active
+            # version" — i.e. the deploy DID apply. Treat that idempotent error as success.
+            if echo "$OUT" | grep -qiE 'is the current active version'; then
+              rm -f "$RUNNER_TEMP/sa.json"; echo "::notice::release already applied (idempotent) — success"; exit 0
+            fi
+            echo "::warning::deploy attempt $attempt failed (code $CODE); retrying in 10s"
+            sleep 10
+          done
+          rm -f "$RUNNER_TEMP/sa.json"
+          echo "::error::firebase deploy failed after 3 attempts"; exit 1
