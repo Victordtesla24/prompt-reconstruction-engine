@@ -1,5 +1,5 @@
 {
-  "capturedAt": "2026-06-26T04-20-05-755Z",
+  "capturedAt": "2026-06-26T18-28-44-492Z",
   "url": "https://prompt-reconstruction-engine.web.app/?final=1782434252",
   "checks": {
     "http200": true,
@@ -15,40 +15,61 @@
     "ok": true,
     "endpoint": "http://127.0.0.1:9222/json",
     "port": 9222,
-    "targetCount": 1,
+    "targetCount": 4,
     "targets": [
       {
         "title": "Prompt Reconstruction Engine — Max Execution Accuracy",
-        "url": "https://prompt-reconstruction-engine.web.app/?final=1782434252",
+        "url": "https://prompt-reconstruction-engine.web.app/",
+        "type": "webview"
+      },
+      {
+        "title": "about:blank",
+        "url": "about:blank",
+        "type": "webview"
+      },
+      {
+        "title": "Prompt Reconstruction Engine — Max Execution Accuracy — prompt-reconstruction-engine",
+        "url": "vscode-file://vscode-app/Applications/Cursor.app/Contents/Resources/app/out/vs/code/electron-sandbox/workbench/workbench.html",
         "type": "page"
+      },
+      {
+        "title": "TextMateWorker",
+        "url": "blob:vscode-file://vscode-app/81a8a2a8-23d0-41aa-8683-abec0dd5347b",
+        "type": "worker"
       }
     ],
     "candidates": [
-      7326,
       9222,
-      44732
+      25030
     ],
     "probes": [
-      {
-        "port": 7326,
-        "endpoint": "http://127.0.0.1:7326/json",
-        "responding": false,
-        "status": 404,
-        "error": null,
-        "targetCount": 0
-      },
       {
         "port": 9222,
         "endpoint": "http://127.0.0.1:9222/json",
         "responding": true,
         "status": 200,
         "error": null,
-        "targetCount": 1,
+        "targetCount": 4,
         "targets": [
           {
             "title": "Prompt Reconstruction Engine — Max Execution Accuracy",
-            "url": "https://prompt-reconstruction-engine.web.app/?final=1782434252",
+            "url": "https://prompt-reconstruction-engine.web.app/",
+            "type": "webview"
+          },
+          {
+            "title": "about:blank",
+            "url": "about:blank",
+            "type": "webview"
+          },
+          {
+            "title": "Prompt Reconstruction Engine — Max Execution Accuracy — prompt-reconstruction-engine",
+            "url": "vscode-file://vscode-app/Applications/Cursor.app/Contents/Resources/app/out/vs/code/electron-sandbox/workbench/workbench.html",
             "type": "page"
+          },
+          {
+            "title": "TextMateWorker",
+            "url": "blob:vscode-file://vscode-app/81a8a2a8-23d0-41aa-8683-abec0dd5347b",
+            "type": "worker"
           }
         ]
       }
