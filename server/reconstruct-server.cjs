@@ -205,13 +205,22 @@ const server = http.createServer((req, res) => {
     req.on('data', (c) => { body += c; if (body.length > MAX_BODY) { tooBig = true; req.destroy(); } });
     req.on('end', async () => {
       if (tooBig) return;
-      // Flush headers early so reverse proxies that honour it (nginx via
+      // Validate the request BEFORE any early header flush: the flush commits a
+      // 200 status that can no longer be changed, so client errors (bad JSON,
+      // missing raw) must be answered with a proper 4xx here while the headers
+      // are still mutable.
+      let parsed;
+      try { parsed = JSON.parse(body || '{}'); } catch (e) { return send(res, 400, { ok: false, error: 'invalid JSON' }); }
+      const raw = (parsed.raw || '').toString();
+      if (!raw.trim()) return send(res, 400, { ok: false, error: 'raw prompt required' });
+      const target = PRE.MODELS[parsed.target] ? parsed.target : 'generic';
+      const preferred = (parsed.reconstructor && PRE.RECONSTRUCTOR_CHAIN.indexOf(parsed.reconstructor) >= 0) ? parsed.reconstructor : null;
+      const attachments = PRE.normalizeAttachments(parsed.attachments);
+      // Now flush headers early so reverse proxies that honour it (nginx via
       // X-Accel-Buffering) see activity during long OpenRouter reconstructions
       // instead of timing out idle POSTs. Env-gated (default on): some tunnels
       // (localtunnel) can't proxy an early-flushed chunked response and 408/502
-      // — set RECON_FLUSH_EARLY=0 there. Tunnels that hold the request natively
-      // (localtunnel, cloudflared) don't need it; serveo's ~6s cap isn't fixed
-      // by it either, so the normal send() path is the safer default per-tunnel.
+      // — set RECON_FLUSH_EARLY=0 there.
       if (process.env.RECON_FLUSH_EARLY !== '0' && !res.headersSent) {
         res.writeHead(200, {
           'Content-Type': 'application/json',
@@ -220,13 +229,6 @@ const server = http.createServer((req, res) => {
         });
       }
       try {
-        let parsed;
-        try { parsed = JSON.parse(body || '{}'); } catch (e) { return res.end(JSON.stringify({ ok: false, error: 'invalid JSON' })); }
-        const raw = (parsed.raw || '').toString();
-        if (!raw.trim()) return res.end(JSON.stringify({ ok: false, error: 'raw prompt required' }));
-        const target = PRE.MODELS[parsed.target] ? parsed.target : 'generic';
-        const preferred = (parsed.reconstructor && PRE.RECONSTRUCTOR_CHAIN.indexOf(parsed.reconstructor) >= 0) ? parsed.reconstructor : null;
-        const attachments = PRE.normalizeAttachments(parsed.attachments);
         const t0 = Date.now();
         const out = await reconstruct(raw, target, preferred, attachments);
         // Only a real OpenRouter-backed result consumes the paid daily budget;
